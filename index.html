@@ -8,7 +8,6 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body, html { width: 100%; height: 100%; background: #000; overflow: hidden; }
 
-    /* Barra superior para sugerir giro de pantalla */
     #rotateNotice {
       position: absolute;
       top: 15px;
@@ -35,7 +34,6 @@
       text-align: center;
     }
 
-    /* Animación del teléfono girando */
     .phone-icon {
       font-size: 18px;
       display: inline-block;
@@ -48,7 +46,6 @@
       100% { transform: rotate(0deg); }
     }
 
-    /* Si el usuario voltea el teléfono a horizontal, se oculta la barra automáticamente */
     @media (orientation: landscape) {
       #rotateNotice {
         display: none !important;
@@ -65,15 +62,13 @@
       background: #000;
     }
 
-    /* Ajuste para que NUNCA se recorte el video */
     video {
       width: 100%;
       height: 100%;
-      object-fit: contain; /* Ajuste perfecto al encuadre completo */
+      object-fit: contain;
       background: #000;
     }
 
-    /* Pantalla de precarga inicial */
     #loaderScreen {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -111,7 +106,6 @@
       transition: width 0.2s linear;
     }
 
-    /* Botón interactivo llamativo */
     #triggerBtn {
       position: absolute;
       bottom: 80px;
@@ -139,7 +133,6 @@
       100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 128, 0); }
     }
 
-    /* Modal sobrepuesto */
     #overlayModal {
       position: absolute;
       bottom: 25px;
@@ -199,7 +192,6 @@
       cursor: not-allowed;
     }
 
-    /* Barra de consulta en modal */
     .mini-progress-bg {
       width: 100%;
       height: 8px;
@@ -259,7 +251,6 @@
       cursor: pointer;
     }
 
-    /* Emojis con marcos */
     .emoji-title {
       font-size: 14px;
       color: #e2e8f0;
@@ -307,7 +298,6 @@
     }
     .card-perder .emoji-label { color: #f87171; }
 
-    /* Mensajes de Estado */
     .status-msg {
       margin-top: 14px;
       padding: 14px;
@@ -324,42 +314,36 @@
 </head>
 <body>
 
-<div class="video-wrapper">
-  <!-- Aviso para voltear el celular (solo visible en modo vertical) -->
+<div class="video-wrapper" id="videoContainer">
   <div id="rotateNotice">
     <span class="phone-icon">📱</span>
     <span>Gira tu teléfono en horizontal para ver mejor el video</span>
   </div>
 
-  <!-- Pantalla de Carga Inicial -->
   <div id="loaderScreen">
     <div id="loadingContent">
       <h3 id="loaderStatus">Preparando video...</h3>
       <div class="progress-bar-bg">
         <div id="progressBar" class="progress-fill"></div>
       </div>
-      <p id="timerCountdown">Descargando... 0s transcurridos</p>
+      <p id="timerCountdown">Descargando paquete optimizado: 0s transcurridos</p>
     </div>
     <button id="startPlayBtn" class="btn-action" style="display:none; max-width:220px; background:#25d366; font-size:18px;">▶ Iniciar Video</button>
   </div>
 
   <video id="interactiveVideo" playsinline webkit-playsinline></video>
 
-  <!-- Botón Interactivo Flotante -->
   <button id="triggerBtn" onclick="abrirModal()">✨ ¡Participa Aquí! ✨</button>
 
-  <!-- Modal Emergente -->
   <div id="overlayModal">
-    <!-- Paso 1: Usuario -->
     <div id="stepUsuario">
       <div class="form-group">
-        <label>Ingresa las 4 letras de tu CURP y dia cumpleaños (4 letras y 2 números):</label>
+        <label>Ingresa tu clave de Usuario (4 letras y 2 números):</label>
         <input type="text" id="inputUsuario" placeholder="EJ. ABCD12" maxlength="6" style="text-transform: uppercase;">
       </div>
       <button id="btnContinuarUsuario" class="btn-action" onclick="validarUsuario()">Continuar</button>
     </div>
 
-    <!-- Paso 2A: Registro Previo -->
     <div id="stepPrevio" style="display:none;">
       <div class="summary-card">
         <p><strong>Nombre:</strong> <span id="lblPrevioNombre"></span></p>
@@ -373,7 +357,6 @@
       </div>
     </div>
 
-    <!-- Paso 2B: Asistencia -->
     <div id="stepAsistencia" style="display:none;">
       <div class="form-group">
         <label>Nombre Completo:</label>
@@ -404,20 +387,13 @@
       </div>
     </div>
 
-    <!-- Mensajes de Estado -->
     <div id="statusBox" class="status-msg"></div>
   </div>
 </div>
 
 <script>
-  // ==========================================
-  // CONFIGURACIÓN PRINCIPAL
-  // ==========================================
   const VIDEO_URL = "https://www.dropbox.com/scl/fi/kh5c08g9khqzo5v8y3gkx/INVITACION_FIESTA_2026-LIGTH.mp4?rlkey=6bddb3r87yjzrgvisjoztbjwx&st=or5ytvs7&raw=1";
-  
-  // Recuerda mantener aquí la URL de tu Web App de Apps Script (/exec)
   const API_URL = "https://script.google.com/macros/s/AKfycbxQtiPkf6OLFs2rs5OnpZl_di7ghT7LjDwjMKjMIeTWujku3cV_fSvJ31rEte9F_0ReoA/exec";
-  
   const SEGUNDO_APARICION = 5;
 
   const video = document.getElementById('interactiveVideo');
@@ -438,7 +414,17 @@
     this.value = this.value.toUpperCase();
   });
 
-  // 1. Carga optimizada
+  // Retención de reproducción al rotar el teléfono
+  window.addEventListener('orientationchange', () => {
+    const current = video.currentTime;
+    const wasPlaying = !video.paused;
+    setTimeout(() => {
+      video.currentTime = current;
+      if (wasPlaying) video.play();
+    }, 200);
+  });
+
+  // Carga con soporte de búfer
   window.addEventListener('load', () => {
     const loadingContent = document.getElementById('loadingContent');
     const progressBar = document.getElementById('progressBar');
@@ -449,7 +435,7 @@
     let startTime = Date.now();
     let timerInterval = setInterval(() => {
       let elapsed = Math.floor((Date.now() - startTime) / 1000);
-      timerCountdown.innerText = `Descargando... ${elapsed}s transcurridos`;
+      timerCountdown.innerText = `Descargando paquete optimizado: ${elapsed}s transcurridos`;
     }, 1000);
 
     video.src = VIDEO_URL;
@@ -480,11 +466,19 @@
     playBtn.onclick = () => {
       document.getElementById('loaderScreen').style.display = 'none';
       video.controls = true;
+
+      // Pantalla completa en Android / navegadores estándar
+      const container = document.getElementById('videoContainer');
+      if (container.requestFullscreen) {
+        container.requestFullscreen().catch(() => {});
+      } else if (container.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen();
+      }
+
       video.play();
     };
   });
 
-  // 2. Control de tiempo para botón flotante
   video.addEventListener('timeupdate', () => {
     if (video.currentTime >= SEGUNDO_APARICION && triggerBtn.style.display !== 'block' && modal.style.display !== 'block') {
       triggerBtn.style.display = 'block';
@@ -496,7 +490,6 @@
     modal.style.display = 'block';
   }
 
-  // 3. Validación de Usuario
   async function validarUsuario() {
     const userInput = document.getElementById('inputUsuario').value.trim().toUpperCase();
     const btnContinuar = document.getElementById('btnContinuarUsuario');
@@ -508,7 +501,7 @@
 
     btnContinuar.disabled = true;
     btnContinuar.innerText = "Consultando...";
-    iniciarCargaConsulta("Buscando usuario");
+    iniciarCargaConsulta("Buscando usuario en la base de datos");
 
     try {
       const response = await fetch(`${API_URL}?action=validarUsuario&usuario=${encodeURIComponent(userInput)}`);
@@ -598,7 +591,6 @@
     document.getElementById('stepAsistencia').style.display = 'block';
   }
 
-  // 4. Guardado al pulsar un Emoji
   async function guardarEleccion(emojiTexto) {
     const cel = document.getElementById('txtCelular').value.replace(/\D/g, '').trim();
 
