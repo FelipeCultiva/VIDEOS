@@ -8,6 +8,53 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
     body, html { width: 100%; height: 100%; background: #000; overflow: hidden; }
 
+    /* Barra superior para sugerir giro de pantalla */
+    #rotateNotice {
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 40;
+      background: rgba(20, 24, 33, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+      pointer-events: none;
+      width: 90%;
+      max-width: 360px;
+      justify-content: center;
+      text-align: center;
+    }
+
+    /* Animación del teléfono girando */
+    .phone-icon {
+      font-size: 18px;
+      display: inline-block;
+      animation: rotatePhone 2.5s infinite ease-in-out;
+    }
+
+    @keyframes rotatePhone {
+      0%, 20% { transform: rotate(0deg); }
+      50%, 70% { transform: rotate(90deg); }
+      100% { transform: rotate(0deg); }
+    }
+
+    /* Si el usuario voltea el teléfono a horizontal, se oculta la barra automáticamente */
+    @media (orientation: landscape) {
+      #rotateNotice {
+        display: none !important;
+      }
+    }
+
     .video-wrapper {
       position: relative;
       width: 100vw;
@@ -15,12 +62,15 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      background: #000;
     }
 
+    /* Ajuste para que NUNCA se recorte el video */
     video {
       width: 100%;
       height: 100%;
-      object-fit: cover;
+      object-fit: contain; /* Ajuste perfecto al encuadre completo */
+      background: #000;
     }
 
     /* Pantalla de precarga inicial */
@@ -61,10 +111,10 @@
       transition: width 0.2s linear;
     }
 
-    /* Botón flotante interactivo con pulso llamativo */
+    /* Botón interactivo llamativo */
     #triggerBtn {
       position: absolute;
-      bottom: 75px;
+      bottom: 80px;
       left: 50%;
       transform: translateX(-50%);
       background: linear-gradient(135deg, #ff007f, #7928ca);
@@ -89,7 +139,7 @@
       100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 128, 0); }
     }
 
-    /* Modal emergente sobrepuesto */
+    /* Modal sobrepuesto */
     #overlayModal {
       position: absolute;
       bottom: 25px;
@@ -149,7 +199,7 @@
       cursor: not-allowed;
     }
 
-    /* Barra de progreso para peticiones */
+    /* Barra de consulta en modal */
     .mini-progress-bg {
       width: 100%;
       height: 8px;
@@ -209,7 +259,7 @@
       cursor: pointer;
     }
 
-    /* Emojis con marcos de colores */
+    /* Emojis con marcos */
     .emoji-title {
       font-size: 14px;
       color: #e2e8f0;
@@ -257,7 +307,7 @@
     }
     .card-perder .emoji-label { color: #f87171; }
 
-    /* Mensajes */
+    /* Mensajes de Estado */
     .status-msg {
       margin-top: 14px;
       padding: 14px;
@@ -275,6 +325,12 @@
 <body>
 
 <div class="video-wrapper">
+  <!-- Aviso para voltear el celular (solo visible en modo vertical) -->
+  <div id="rotateNotice">
+    <span class="phone-icon">📱</span>
+    <span>Gira tu teléfono en horizontal para ver mejor el video</span>
+  </div>
+
   <!-- Pantalla de Carga Inicial -->
   <div id="loaderScreen">
     <div id="loadingContent">
@@ -282,7 +338,7 @@
       <div class="progress-bar-bg">
         <div id="progressBar" class="progress-fill"></div>
       </div>
-      <p id="timerCountdown">Descargando paquete optimizado: 0s transcurridos</p>
+      <p id="timerCountdown">Descargando... 0s transcurridos</p>
     </div>
     <button id="startPlayBtn" class="btn-action" style="display:none; max-width:220px; background:#25d366; font-size:18px;">▶ Iniciar Video</button>
   </div>
@@ -297,7 +353,7 @@
     <!-- Paso 1: Usuario -->
     <div id="stepUsuario">
       <div class="form-group">
-        <label>Ingresa tu clave de Usuario (4 letras y 2 números):</label>
+        <label>Ingresa las 4 letras de tu CURP y dia cumpleaños (4 letras y 2 números):</label>
         <input type="text" id="inputUsuario" placeholder="EJ. ABCD12" maxlength="6" style="text-transform: uppercase;">
       </div>
       <button id="btnContinuarUsuario" class="btn-action" onclick="validarUsuario()">Continuar</button>
@@ -359,8 +415,8 @@
   // ==========================================
   const VIDEO_URL = "https://www.dropbox.com/scl/fi/22j2o6xn4szaads8zbxwr/INVITACION_FIESTA_2026.mp4?rlkey=pe3llxcgvqvdktz8t68wc5q2m&st=6dmz0pju&raw=1";
   
-  // PEGA AQUÍ LA URL COMPLETA DE TU APPS SCRIPT TERMINADA EN /exec:
-  const API_URL = "https://script.google.com/macros/s/AKfycbxQtiPkf6OLFs2rs5OnpZI_di7ghT7LjDwjMKjMleTWujku3cV_fSvJ31rEte9F_0Rf/exec";
+  // Recuerda mantener aquí la URL de tu Web App de Apps Script (/exec)
+  const API_URL = "https://script.google.com/macros/s/AKfycbxQtiPkf6OLFs2rs5OnpZl_di7ghT7LjDwjMKjMIeTWujku3cV_fSvJ31rEte9F_0ReoA/exec";
   
   const SEGUNDO_APARICION = 5;
 
@@ -393,7 +449,7 @@
     let startTime = Date.now();
     let timerInterval = setInterval(() => {
       let elapsed = Math.floor((Date.now() - startTime) / 1000);
-      timerCountdown.innerText = `Descargando paquete optimizado: ${elapsed}s transcurridos`;
+      timerCountdown.innerText = `Descargando... ${elapsed}s transcurridos`;
     }, 1000);
 
     video.src = VIDEO_URL;
@@ -440,7 +496,7 @@
     modal.style.display = 'block';
   }
 
-  // 3. Validación de Usuario mediante fetch GET
+  // 3. Validación de Usuario
   async function validarUsuario() {
     const userInput = document.getElementById('inputUsuario').value.trim().toUpperCase();
     const btnContinuar = document.getElementById('btnContinuarUsuario');
@@ -452,7 +508,7 @@
 
     btnContinuar.disabled = true;
     btnContinuar.innerText = "Consultando...";
-    iniciarCargaConsulta("Buscando usuario en la base de datos");
+    iniciarCargaConsulta("Buscando usuario");
 
     try {
       const response = await fetch(`${API_URL}?action=validarUsuario&usuario=${encodeURIComponent(userInput)}`);
@@ -542,7 +598,7 @@
     document.getElementById('stepAsistencia').style.display = 'block';
   }
 
-  // 4. Guardado al pulsar un Emoji mediante fetch POST
+  // 4. Guardado al pulsar un Emoji
   async function guardarEleccion(emojiTexto) {
     const cel = document.getElementById('txtCelular').value.replace(/\D/g, '').trim();
 
@@ -563,7 +619,6 @@
     };
 
     try {
-      // Envío usando text/plain para evitar la verificación previa OPTIONS de CORS
       const response = await fetch(API_URL, {
         method: "POST",
         body: JSON.stringify(payload),
