@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Invitación Interactiva</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body, html { width: 100%; height: 100%; background: #000; overflow: hidden; }
+
+    .video-wrapper {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Pantalla de precarga inicial */
+    #loaderScreen {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: #0f1115;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: #fff;
+      z-index: 50;
+      padding: 20px;
+      text-align: center;
+    }
+
+    #loadingContent {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .progress-bar-bg {
+      width: 85%;
+      max-width: 340px;
+      height: 16px;
+      background: #252830;
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 18px 0;
+    }
+    .progress-fill {
+      width: 0%;
+      height: 100%;
+      background: #25d366;
+      transition: width 0.2s linear;
+    }
+
+    /* Botón flotante interactivo con pulso llamativo */
+    #triggerBtn {
+      position: absolute;
+      bottom: 75px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #ff007f, #7928ca);
+      color: #fff;
+      border: 2px solid rgba(255, 255, 255, 0.85);
+      padding: 16px 36px;
+      border-radius: 50px;
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      box-shadow: 0 0 25px rgba(255, 0, 128, 0.7);
+      cursor: pointer;
+      display: none;
+      z-index: 25;
+      animation: pulseBtn 1.4s infinite;
+    }
+
+    @keyframes pulseBtn {
+      0% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 128, 0.7); }
+      70% { transform: translateX(-50%) scale(1.06); box-shadow: 0 0 0 18px rgba(255, 0, 128, 0); }
+      100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 128, 0); }
+    }
+
+    /* Modal emergente sobrepuesto */
+    #overlayModal {
+      position: absolute;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 92%;
+      max-width: 410px;
+      background: rgba(18, 20, 29, 0.95);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 22px;
+      color: #fff;
+      z-index: 35;
+      display: none;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.85);
+      text-align: center;
+    }
+
+    .form-group { margin-bottom: 14px; text-align: left; }
+    label { font-size: 13px; color: #a0aec0; display: block; margin-bottom: 6px; font-weight: 600; }
+    
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #4a5568;
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font-size: 16px;
+      outline: none;
+    }
+    input:focus { border-color: #ff007f; }
+    input.readonly-input {
+      background: rgba(255, 255, 255, 0.04);
+      color: #cbd5e0;
+      border: 1px dashed #4a5568;
+      cursor: not-allowed;
+    }
+
+    .btn-action {
+      width: 100%;
+      padding: 13px;
+      border-radius: 10px;
+      border: none;
+      background: #0070f3;
+      color: #fff;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: opacity 0.2s ease;
+    }
+    .btn-action:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Barra de progreso para peticiones */
+    .mini-progress-bg {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 10px 0 6px 0;
+    }
+    .mini-progress-fill {
+      width: 30%;
+      height: 100%;
+      background: #0070f3;
+      border-radius: 4px;
+      animation: indeterminate 1.4s infinite ease-in-out;
+    }
+    @keyframes indeterminate {
+      0% { transform: translateX(-100%); width: 30%; }
+      50% { transform: translateX(100%); width: 60%; }
+      100% { transform: translateX(350%); width: 30%; }
+    }
+
+    .summary-card {
+      background: rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
+      text-align: left;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .btn-dual-container {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .btn-secondary {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #4a5568;
+      background: transparent;
+      color: #e2e8f0;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-modify {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      background: #f59e0b;
+      color: #000;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Emojis con marcos de colores */
+    .emoji-title {
+      font-size: 14px;
+      color: #e2e8f0;
+      margin: 14px 0 10px 0;
+      font-weight: bold;
+      text-align: left;
+    }
+    .emoji-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 5px;
+    }
+    .emoji-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 6px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      transition: transform 0.15s ease, background 0.15s ease;
+      user-select: none;
+    }
+    .emoji-card:active { transform: scale(0.94); }
+    .emoji-icon { font-size: 42px; line-height: 1; margin-bottom: 8px; }
+    .emoji-label { font-size: 12px; font-weight: bold; }
+
+    .card-asistire {
+      border: 2px solid #10b981;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+    }
+    .card-asistire .emoji-label { color: #34d399; }
+
+    .card-pensando {
+      border: 2px solid #f59e0b;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+    }
+    .card-pensando .emoji-label { color: #fbbf24; }
+
+    .card-perder {
+      border: 2px solid #ef4444;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.25);
+    }
+    .card-perder .emoji-label { color: #f87171; }
+
+    /* Mensajes */
+    .status-msg {
+      margin-top: 14px;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: bold;
+      display: none;
+      line-height: 1.5;
+    }
+    .status-msg.error { background: rgba(239, 68, 68, 0.2); border: 1px solid #ef4444; color: #fca5a5; }
+    .status-msg.success { background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #6ee7b7; }
+    .status-msg.info { background: rgba(0, 112, 243, 0.25); border: 1px solid #0070f3; color: #93c5fd; }
+  </style>
+</head>
+<body>
+
+<div class="video-wrapper">
+  <!-- Pantalla de Carga Inicial -->
+  <div id="loaderScreen">
+    <div id="loadingContent">
+      <h3 id="loaderStatus">Preparando video...</h3>
+      <div class="progress-bar-bg">
+        <div id="progressBar" class="progress-fill"></div>
+      </div>
+      <p id="timerCountdown">Descargando paquete optimizado: 0s transcurridos</p>
+    </div>
+    <button id="startPlayBtn" class="btn-action" style="display:none; max-width:220px; background:#25d366; font-size:18px;">▶ Iniciar Video</button>
+  </div>
+
+  <video id="interactiveVideo" playsinline webkit-playsinline></video>
+
+  <!-- Botón Interactivo Flotante -->
+  <button id="triggerBtn" onclick="abrirModal()">✨ ¡Participa Aquí! ✨</button>
+
+  <!-- Modal Emergente -->
+  <div id="overlayModal">
+    <!-- Paso 1: Usuario -->
+    <div id="stepUsuario">
+      <div class="form-group">
+        <label>Ingresa tu clave de Usuario (4 letras y 2 números):</label>
+        <input type="text" id="inputUsuario" placeholder="EJ. ABCD12" maxlength="6" style="text-transform: uppercase;">
+      </div>
+      <button id="btnContinuarUsuario" class="btn-action" onclick="validarUsuario()">Continuar</button>
+    </div>
+
+    <!-- Paso 2A: Registro Previo -->
+    <div id="stepPrevio" style="display:none;">
+      <div class="summary-card">
+        <p><strong>Nombre:</strong> <span id="lblPrevioNombre"></span></p>
+        <p><strong>Celular:</strong> <span id="lblPrevioCel"></span></p>
+        <p><strong>Respuesta actual:</strong> <span id="lblPrevioResp" style="font-weight:bold; color:#fbbf24;"></span></p>
+      </div>
+      <p style="font-size:14px; margin-bottom:8px;">¿Deseas modificar tu respuesta?</p>
+      <div class="btn-dual-container">
+        <button class="btn-secondary" onclick="mantenerRespuesta()">No, mantener</button>
+        <button class="btn-modify" onclick="habilitarModificacion()">Sí, modificar</button>
+      </div>
+    </div>
+
+    <!-- Paso 2B: Asistencia -->
+    <div id="stepAsistencia" style="display:none;">
+      <div class="form-group">
+        <label>Nombre Completo:</label>
+        <input type="text" id="txtNombre" class="readonly-input" readonly>
+      </div>
+
+      <div class="form-group">
+        <label>Número de Celular (10 dígitos):</label>
+        <input type="tel" id="txtCelular" placeholder="Ej. 5512345678" maxlength="10">
+      </div>
+
+      <div class="emoji-title">Elige tu confirmación:</div>
+      <div class="emoji-grid">
+        <div class="emoji-card card-asistire" onclick="guardarEleccion('😄 Asistiré')">
+          <div class="emoji-icon">😄</div>
+          <div class="emoji-label">Asistiré</div>
+        </div>
+
+        <div class="emoji-card card-pensando" onclick="guardarEleccion('🤔 Lo estoy pensando')">
+          <div class="emoji-icon">🤔</div>
+          <div class="emoji-label">Lo estoy pensando</div>
+        </div>
+
+        <div class="emoji-card card-perder" onclick="guardarEleccion('😢 Me lo voy a perder')">
+          <div class="emoji-icon">😢</div>
+          <div class="emoji-label">Me lo voy a perder</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensajes de Estado -->
+    <div id="statusBox" class="status-msg"></div>
+  </div>
+</div>
+
+<script>
+  // ==========================================
+  // CONFIGURACIÓN PRINCIPAL
+  // ==========================================
+  const VIDEO_URL = "https://www.dropbox.com/scl/fi/5ge8vaq3ns3x3r12q0srg/CULTIVANDO_IDEAS_LAS_FINANZAS_DE_LOS_POBRES.mp4?rlkey=a0qooiwj7il0t65sn4xxoslzj&st=mbikh5xv&raw=1";
+  
+  // PEGA AQUÍ LA URL COMPLETA DE TU APPS SCRIPT TERMINADA EN /exec:
+  const API_URL = "https://script.google.com/macros/s/TU_SCRIPT_ID/exec";
+  
+  const SEGUNDO_APARICION = 5;
+
+  const video = document.getElementById('interactiveVideo');
+  const triggerBtn = document.getElementById('triggerBtn');
+  const modal = document.getElementById('overlayModal');
+  const statusBox = document.getElementById('statusBox');
+
+  let sesion = {
+    usuario: '',
+    nombre: '',
+    celular: '',
+    esModificacion: false
+  };
+
+  let queryTimer = null;
+
+  document.getElementById('inputUsuario').addEventListener('input', function() {
+    this.value = this.value.toUpperCase();
+  });
+
+  // 1. Carga optimizada
+  window.addEventListener('load', () => {
+    const loadingContent = document.getElementById('loadingContent');
+    const progressBar = document.getElementById('progressBar');
+    const loaderStatus = document.getElementById('loaderStatus');
+    const timerCountdown = document.getElementById('timerCountdown');
+    const playBtn = document.getElementById('startPlayBtn');
+
+    let startTime = Date.now();
+    let timerInterval = setInterval(() => {
+      let elapsed = Math.floor((Date.now() - startTime) / 1000);
+      timerCountdown.innerText = `Descargando paquete optimizado: ${elapsed}s transcurridos`;
+    }, 1000);
+
+    video.src = VIDEO_URL;
+    video.preload = "auto";
+    video.load();
+
+    video.addEventListener('progress', () => {
+      if (video.duration && video.buffered.length > 0) {
+        let bufferedEnd = video.buffered.end(video.buffered.length - 1);
+        let percent = Math.min(100, Math.round((bufferedEnd / video.duration) * 100));
+        progressBar.style.width = percent + "%";
+        loaderStatus.innerText = `Cargando video... ${percent}%`;
+      }
+    });
+
+    function activarInicio() {
+      clearInterval(timerInterval);
+      loadingContent.style.display = 'none';
+      playBtn.style.display = 'block';
+    }
+
+    video.addEventListener('canplaythrough', activarInicio, { once: true });
+
+    if (video.readyState >= 3) {
+      activarInicio();
+    }
+
+    playBtn.onclick = () => {
+      document.getElementById('loaderScreen').style.display = 'none';
+      video.controls = true;
+      video.play();
+    };
+  });
+
+  // 2. Control de tiempo para botón flotante
+  video.addEventListener('timeupdate', () => {
+    if (video.currentTime >= SEGUNDO_APARICION && triggerBtn.style.display !== 'block' && modal.style.display !== 'block') {
+      triggerBtn.style.display = 'block';
+    }
+  });
+
+  function abrirModal() {
+    triggerBtn.style.display = 'none';
+    modal.style.display = 'block';
+  }
+
+  // 3. Validación de Usuario mediante fetch GET
+  async function validarUsuario() {
+    const userInput = document.getElementById('inputUsuario').value.trim().toUpperCase();
+    const btnContinuar = document.getElementById('btnContinuarUsuario');
+
+    if (userInput.length !== 6) {
+      mostrarError("El usuario debe tener exactamente 6 caracteres (4 letras y 2 números)");
+      return;
+    }
+
+    btnContinuar.disabled = true;
+    btnContinuar.innerText = "Consultando...";
+    iniciarCargaConsulta("Buscando usuario en la base de datos");
+
+    try {
+      const response = await fetch(`${API_URL}?action=validarUsuario&usuario=${encodeURIComponent(userInput)}`);
+      const res = await response.json();
+
+      detenerCargaConsulta();
+      btnContinuar.disabled = false;
+      btnContinuar.innerText = "Continuar";
+
+      if (res.status === 'NO_EXISTE') {
+        mostrarError("Error en usuario: no encontrado");
+      } else if (res.status === 'EXITO') {
+        ocultarStatus();
+        sesion.usuario = res.usuario;
+        sesion.nombre = res.nombre;
+        sesion.celular = res.celular;
+
+        document.getElementById('stepUsuario').style.display = 'none';
+
+        if (res.tieneRegistro) {
+          document.getElementById('lblPrevioNombre').innerText = res.nombre;
+          document.getElementById('lblPrevioCel').innerText = res.celular || 'No registrado';
+          document.getElementById('lblPrevioResp').innerText = res.respuestaPrevia;
+          document.getElementById('stepPrevio').style.display = 'block';
+        } else {
+          sesion.esModificacion = false;
+          prepararFormularioAsistencia(res.nombre, "");
+        }
+      } else {
+        mostrarError(res.mensaje || "Error al conectar con la base de datos");
+      }
+    } catch (err) {
+      detenerCargaConsulta();
+      btnContinuar.disabled = false;
+      btnContinuar.innerText = "Continuar";
+      mostrarError("Fallo de conexión: " + err.message);
+    }
+  }
+
+  function iniciarCargaConsulta(mensaje) {
+    let segundos = 0;
+    statusBox.className = "status-msg info";
+    statusBox.innerHTML = `
+      <div>${mensaje} (<span id="querySecs">0s</span>)</div>
+      <div class="mini-progress-bg"><div class="mini-progress-fill"></div></div>
+    `;
+    statusBox.style.display = 'block';
+
+    if (queryTimer) clearInterval(queryTimer);
+    queryTimer = setInterval(() => {
+      segundos++;
+      const span = document.getElementById('querySecs');
+      if (span) span.innerText = segundos + "s";
+    }, 1000);
+  }
+
+  function detenerCargaConsulta() {
+    if (queryTimer) {
+      clearInterval(queryTimer);
+      queryTimer = null;
+    }
+  }
+
+  function mostrarError(mensaje) {
+    detenerCargaConsulta();
+    statusBox.className = "status-msg error";
+    statusBox.innerHTML = mensaje;
+    statusBox.style.display = 'block';
+  }
+
+  function mantenerRespuesta() {
+    document.getElementById('stepPrevio').style.display = 'none';
+    statusBox.className = "status-msg success";
+    statusBox.innerHTML = "¡Perfecto! Conservamos tu confirmación previa.";
+    statusBox.style.display = 'block';
+  }
+
+  function habilitarModificacion() {
+    sesion.esModificacion = true;
+    document.getElementById('stepPrevio').style.display = 'none';
+    prepararFormularioAsistencia(sesion.nombre, sesion.celular);
+  }
+
+  function prepararFormularioAsistencia(nombre, celular) {
+    document.getElementById('txtNombre').value = nombre;
+    document.getElementById('txtCelular').value = celular;
+    document.getElementById('stepAsistencia').style.display = 'block';
+  }
+
+  // 4. Guardado al pulsar un Emoji mediante fetch POST
+  async function guardarEleccion(emojiTexto) {
+    const cel = document.getElementById('txtCelular').value.replace(/\D/g, '').trim();
+
+    if (cel.length < 10) {
+      mostrarError("Por favor ingresa un número de celular válido a 10 dígitos");
+      return;
+    }
+
+    iniciarCargaConsulta("Guardando tu respuesta");
+
+    const payload = {
+      usuario: sesion.usuario,
+      nombre: sesion.nombre,
+      celular: cel,
+      respuesta: emojiTexto,
+      segundoVideo: Math.floor(video.currentTime),
+      esModificacion: sesion.esModificacion
+    };
+
+    try {
+      // Envío usando text/plain para evitar la verificación previa OPTIONS de CORS
+      const response = await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify(payload),
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        }
+      });
+
+      const res = await response.json();
+      detenerCargaConsulta();
+
+      if (res.status === 'EXITO') {
+        document.getElementById('stepAsistencia').style.display = 'none';
+        statusBox.className = "status-msg success";
+        statusBox.innerHTML = res.mensaje;
+        statusBox.style.display = 'block';
+      } else {
+        mostrarError(res.mensaje || "Error al procesar el guardado");
+      }
+    } catch (err) {
+      mostrarError("Error al guardar: " + err.message);
+    }
+  }
+
+  function ocultarStatus() {
+    detenerCargaConsulta();
+    statusBox.style.display = 'none';
+  }
+</script>
+
+</body>
+</html>
