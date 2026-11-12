@@ -179,7 +179,6 @@
       }
     }
 
-    /* Botón de cerrar modal */
     .close-modal-btn {
       position: absolute;
       top: 10px;
@@ -210,6 +209,7 @@
       color: #fff;
       font-size: 16px;
       outline: none;
+      letter-spacing: 1px;
     }
     input:focus { border-color: #ff007f; }
     input.readonly-input {
@@ -217,6 +217,7 @@
       color: #cbd5e0;
       border: 1px dashed #4a5568;
       cursor: not-allowed;
+      letter-spacing: normal;
     }
 
     .btn-action {
@@ -386,7 +387,7 @@
     <!-- Paso 1: Usuario -->
     <div id="stepUsuario">
       <div class="form-group">
-        <label>Ingresa las 4 letras de tu CURP y día de cumpleaños (6 caracteres):</label>
+        <label>Ingresa las 4 letras de tu CURP y día de cumpleaños (4 letras + 2 números):</label>
         <input type="text" id="inputUsuario" placeholder="EJ. SERV16" maxlength="6" enterkeyhint="go" autocapitalize="characters" autocomplete="off" style="text-transform: uppercase;">
       </div>
       <button id="btnContinuarUsuario" class="btn-action" onclick="validarUsuario()">Continuar</button>
@@ -442,9 +443,12 @@
 </div>
 
 <script>
-  const VIDEO_URL = "https://www.dropbox.com/scl/fi/z7vuqjalnza5r3smpd29g/2DA-LLAMADA-FIESTA-2026-V.4-ligth.mp4?rlkey=lkw5iewndz36uyz1tmjwi5obu&st=qfbd01yj&raw=1";
+  const VIDEO_URL = "https://www.dropbox.com/scl/fi/z7vuqjalnza5r3smpd29g/2DA-LLAMADA-FIESTA-2026-V.4-ligth.mp4?rlkey=lkw5iewndz36uyz1tmjwi5obu&st=tsxz36r4&raw=1";
   const API_URL = "https://script.google.com/macros/s/AKfycbxQtiPkf6OLFs2rs5OnpZI_di7ghT7LjDwjMKjMleTWujku3cV_fSvJ31rEte9F_0Rf/exec";
   const SEGUNDO_APARICION = 30;
+
+  // Regla estricta: exactamente 4 letras seguidas de 2 números
+  const FORMATO_USUARIO_REGEX = /^[A-Z]{4}[0-9]{2}$/;
 
   const video = document.getElementById('interactiveVideo');
   const triggerBtn = document.getElementById('triggerBtn');
@@ -461,27 +465,52 @@
   };
 
   let queryTimer = null;
+  let debounceTimer = null;
+  let activeRequestId = 0;
 
-  // Control inteligente de entrada en Usuario:
-  // Convierte a mayúsculas y al llegar a 6 caracteres oculta teclado y valida automáticamente
+  // Control estricto al teclear el usuario (4 letras seguidas de 2 números)
   inputUsuario.addEventListener('input', function() {
-    this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    if (this.value.length === 6) {
-      this.blur(); // Baja el teclado virtual en Android e iOS
-      validarUsuario();
+    clearTimeout(debounceTimer);
+    
+    // Limpiar caracteres no alfanuméricos y forzar mayúsculas
+    let raw = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    
+    // Filtrar posición por posición: posiciones 0-3 solo letras, posiciones 4-5 solo números
+    let clean = '';
+    for (let i = 0; i < raw.length && i < 6; i++) {
+      if (i < 4) {
+        if (/[A-Z]/.test(raw[i])) clean += raw[i];
+      } else {
+        if (/[0-9]/.test(raw[i])) clean += raw[i];
+      }
+    }
+    this.value = clean;
+
+    // Si había un mensaje de error previo, ocultarlo al empezar a corregir
+    if (statusBox.classList.contains('error')) {
+      ocultarStatus();
+    }
+
+    // Auto-disparo seguro solo si cumple con 4 letras + 2 números
+    if (FORMATO_USUARIO_REGEX.test(clean)) {
+      debounceTimer = setTimeout(() => {
+        this.blur();
+        validarUsuario();
+      }, 250);
     }
   });
 
-  // Soporte para la tecla "Ir" / "Enter" del teclado móvil
+  // Soporte para la tecla "Ir" / "Enter"
   inputUsuario.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
       e.preventDefault();
+      clearTimeout(debounceTimer);
       this.blur();
       validarUsuario();
     }
   });
 
-  // Ocultar teclado automáticamente al completar los 10 dígitos del celular
+  // Ocultar teclado al completar los 10 dígitos del celular
   txtCelular.addEventListener('input', function() {
     this.value = this.value.replace(/\D/g, '');
     if (this.value.length === 10) {
@@ -580,14 +609,13 @@
     triggerBtn.style.display = 'block';
   }
 
-  function validarUsuario() {
+  // Motor Híbrido (Fetch estándar + Respaldo JSONP) para máxima compatibilidad Android / iOS
+  async function validarUsuario() {
     const userInput = inputUsuario.value.trim().toUpperCase();
     const btnContinuar = document.getElementById('btnContinuarUsuario');
 
-    if (btnContinuar.disabled) return;
-
-    if (userInput.length !== 6) {
-      mostrarError("El usuario debe tener exactamente 6 caracteres (4 letras y 2 números)");
+    if (!FORMATO_USUARIO_REGEX.test(userInput)) {
+      mostrarError("Formato inválido: ingresa 4 letras seguidas de 2 números (Ej. SERV16).");
       return;
     }
 
@@ -596,64 +624,92 @@
     btnContinuar.innerText = "Consultando...";
     iniciarCargaConsulta("Buscando usuario en la base de datos");
 
-    // Crear llamada JSONP inmune a bloqueos CORS / Load failed en iOS Safari
+    const currentReqId = ++activeRequestId;
+    const targetUrl = `${API_URL}?action=validarUsuario&usuario=${encodeURIComponent(userInput)}&t=${Date.now()}`;
+
+    try {
+      // 1er Intento: Fetch nativo con seguimiento de redirecciones
+      const response = await fetch(targetUrl, {
+        method: 'GET',
+        redirect: 'follow'
+      });
+
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      const res = await response.json();
+
+      if (currentReqId !== activeRequestId) return; // Ignorar si el usuario ya lanzó otra búsqueda
+      procesarRespuestaUsuario(res, btnContinuar);
+
+    } catch (fetchErr) {
+      // 2do Intento automático (Respaldo JSONP por si Safari/WebView bloqueó el redirect CORS)
+      if (currentReqId !== activeRequestId) return;
+      consultarViaJsonp(userInput, currentReqId, btnContinuar);
+    }
+  }
+
+  function consultarViaJsonp(userInput, reqId, btnContinuar) {
     const callbackName = 'jsonp_cb_' + Math.round(100000 * Math.random());
     const script = document.createElement('script');
 
-    // Tiempo límite de 15 segundos por si no hay respuesta del servidor
     const timeoutId = setTimeout(() => {
-      limpiarJsonp();
+      limpiar();
+      if (reqId !== activeRequestId) return;
       btnContinuar.disabled = false;
       btnContinuar.innerText = "Continuar";
-      mostrarError("Tiempo de espera agotado. Verifica que la API de Apps Script esté pública ('Cualquiera').");
+      mostrarError("Tiempo de espera agotado. Revisa tu conexión a internet e intenta de nuevo.");
     }, 15000);
 
-    function limpiarJsonp() {
+    function limpiar() {
       clearTimeout(timeoutId);
       delete window[callbackName];
       if (script.parentNode) script.parentNode.removeChild(script);
     }
 
     window[callbackName] = function(res) {
-      limpiarJsonp();
-      detenerCargaConsulta();
-      btnContinuar.disabled = false;
-      btnContinuar.innerText = "Continuar";
-
-      if (res.status === 'NO_EXISTE') {
-        mostrarError("Error en usuario: no encontrado");
-      } else if (res.status === 'EXITO') {
-        ocultarStatus();
-        sesion.usuario = res.usuario;
-        sesion.nombre = res.nombre;
-        sesion.celular = res.celular;
-
-        document.getElementById('stepUsuario').style.display = 'none';
-
-        if (res.tieneRegistro) {
-          document.getElementById('lblPrevioNombre').innerText = res.nombre;
-          document.getElementById('lblPrevioCel').innerText = res.celular || 'No registrado';
-          document.getElementById('lblPrevioResp').innerText = res.respuestaPrevia;
-          document.getElementById('stepPrevio').style.display = 'block';
-        } else {
-          sesion.esModificacion = false;
-          prepararFormularioAsistencia(res.nombre, "");
-        }
-      } else {
-        mostrarError(res.mensaje || "Error al conectar con la base de datos");
-      }
+      limpiar();
+      if (reqId !== activeRequestId) return;
+      procesarRespuestaUsuario(res, btnContinuar);
     };
 
     script.onerror = function() {
-      limpiarJsonp();
-      detenerCargaConsulta();
+      limpiar();
+      if (reqId !== activeRequestId) return;
       btnContinuar.disabled = false;
       btnContinuar.innerText = "Continuar";
       mostrarError("No se pudo conectar con Google Sheets. Verifica los permisos de la Web App ('Cualquiera').");
     };
 
-    script.src = `${API_URL}?action=validarUsuario&usuario=${encodeURIComponent(userInput)}&callback=${callbackName}`;
+    script.src = `${API_URL}?action=validarUsuario&usuario=${encodeURIComponent(userInput)}&callback=${callbackName}&t=${Date.now()}`;
     document.body.appendChild(script);
+  }
+
+  function procesarRespuestaUsuario(res, btnContinuar) {
+    detenerCargaConsulta();
+    btnContinuar.disabled = false;
+    btnContinuar.innerText = "Continuar";
+
+    if (res.status === 'NO_EXISTE') {
+      mostrarError("Error en usuario: no encontrado");
+    } else if (res.status === 'EXITO') {
+      ocultarStatus();
+      sesion.usuario = res.usuario;
+      sesion.nombre = res.nombre;
+      sesion.celular = res.celular;
+
+      document.getElementById('stepUsuario').style.display = 'none';
+
+      if (res.tieneRegistro) {
+        document.getElementById('lblPrevioNombre').innerText = res.nombre;
+        document.getElementById('lblPrevioCel').innerText = res.celular || 'No registrado';
+        document.getElementById('lblPrevioResp').innerText = res.respuestaPrevia;
+        document.getElementById('stepPrevio').style.display = 'block';
+      } else {
+        sesion.esModificacion = false;
+        prepararFormularioAsistencia(res.nombre, "");
+      }
+    } else {
+      mostrarError(res.mensaje || "Error al conectar con la base de datos");
+    }
   }
 
   function iniciarCargaConsulta(mensaje) {
