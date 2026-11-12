@@ -2,15 +2,26 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Invitación Interactiva</title>
+
+  <!-- Metadatos Open Graph para tarjeta visual en WhatsApp -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="✨ Segunda Llamada - ¡Confirmación Especial!">
+  <meta property="og:description" content="Toca aquí para ver el video interactivo y confirmar tu asistencia.">
+  <meta property="og:image" content="https://felipecultiva.github.io/VIDEOS/SEGUNDA%20LLAMADA.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="theme-color" content="#ff007f">
+
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body, html { width: 100%; height: 100%; background: #000; overflow: hidden; }
+    body, html { width: 100%; height: 100%; height: 100dvh; background: #000; overflow: hidden; }
 
+    /* Aviso superior para rotar pantalla en vertical */
     #rotateNotice {
       position: absolute;
-      top: 15px;
+      top: 14px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 40;
@@ -19,7 +30,7 @@
       backdrop-filter: blur(8px);
       -webkit-backdrop-filter: blur(8px);
       color: #fff;
-      padding: 10px 18px;
+      padding: 9px 16px;
       border-radius: 30px;
       display: flex;
       align-items: center;
@@ -56,6 +67,7 @@
       position: relative;
       width: 100vw;
       height: 100vh;
+      height: 100dvh;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -69,6 +81,7 @@
       background: #000;
     }
 
+    /* Pantalla de precarga */
     #loaderScreen {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -106,17 +119,18 @@
       transition: width 0.2s linear;
     }
 
+    /* Botón flotante interactivo */
     #triggerBtn {
       position: absolute;
-      bottom: 80px;
+      bottom: 75px;
       left: 50%;
       transform: translateX(-50%);
       background: linear-gradient(135deg, #ff007f, #7928ca);
       color: #fff;
       border: 2px solid rgba(255, 255, 255, 0.85);
-      padding: 16px 36px;
+      padding: 15px 34px;
       border-radius: 50px;
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 900;
       letter-spacing: 0.5px;
       text-transform: uppercase;
@@ -125,6 +139,7 @@
       display: none;
       z-index: 25;
       animation: pulseBtn 1.4s infinite;
+      white-space: nowrap;
     }
 
     @keyframes pulseBtn {
@@ -133,24 +148,54 @@
       100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 128, 0); }
     }
 
+    /* Modal posicionado en la parte superior para quedar libre del teclado virtual */
     #overlayModal {
-      position: absolute;
-      bottom: 25px;
+      position: fixed;
+      top: 10%;
       left: 50%;
       transform: translateX(-50%);
       width: 92%;
       max-width: 410px;
-      background: rgba(18, 20, 29, 0.95);
+      max-height: 82dvh;
+      overflow-y: auto;
+      background: rgba(18, 20, 29, 0.96);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.25);
       border-radius: 20px;
-      padding: 22px;
+      padding: 20px;
+      padding-top: 32px;
       color: #fff;
-      z-index: 35;
+      z-index: 45;
       display: none;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.85);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.9);
       text-align: center;
+    }
+
+    @media (orientation: landscape) {
+      #overlayModal {
+        top: 5%;
+        max-height: 90dvh;
+      }
+    }
+
+    /* Botón de cerrar modal */
+    .close-modal-btn {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      background: rgba(255, 255, 255, 0.12);
+      border: none;
+      color: #cbd5e0;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .form-group { margin-bottom: 14px; text-align: left; }
@@ -161,7 +206,7 @@
       padding: 12px;
       border-radius: 10px;
       border: 1px solid #4a5568;
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.1);
       color: #fff;
       font-size: 16px;
       outline: none;
@@ -261,7 +306,7 @@
     .emoji-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      gap: 10px;
       margin-top: 5px;
     }
     .emoji-card {
@@ -269,7 +314,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 14px 6px;
+      padding: 12px 4px;
       border-radius: 14px;
       background: rgba(255, 255, 255, 0.05);
       cursor: pointer;
@@ -277,8 +322,8 @@
       user-select: none;
     }
     .emoji-card:active { transform: scale(0.94); }
-    .emoji-icon { font-size: 42px; line-height: 1; margin-bottom: 8px; }
-    .emoji-label { font-size: 12px; font-weight: bold; }
+    .emoji-icon { font-size: 38px; line-height: 1; margin-bottom: 8px; }
+    .emoji-label { font-size: 11px; font-weight: bold; }
 
     .card-asistire {
       border: 2px solid #10b981;
@@ -311,14 +356,6 @@
     .status-msg.success { background: rgba(16, 185, 129, 0.25); border: 1px solid #10b981; color: #6ee7b7; }
     .status-msg.info { background: rgba(0, 112, 243, 0.25); border: 1px solid #0070f3; color: #93c5fd; }
   </style>
-  <!-- Metadatos para la tarjeta visual en WhatsApp -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="✨ Segunda Llamada - ¡Confirmación Especial!">
-  <meta property="og:description" content="Toca aquí para ver el video interactivo y confirmar tu asistencia.">
-  <meta property="og:image" content="https://felipecultiva.github.io/VIDEOS/SEGUNDA%20LLAMADA.jpg">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta name="theme-color" content="#ff007f">
 </head>
 <body>
 
@@ -334,24 +371,28 @@
       <div class="progress-bar-bg">
         <div id="progressBar" class="progress-fill"></div>
       </div>
-      <p id="timerCountdown">Descargando...: 0s transcurridos</p>
+      <p id="timerCountdown">Descargando paquete optimizado: 0s transcurridos</p>
     </div>
     <button id="startPlayBtn" class="btn-action" style="display:none; max-width:220px; background:#25d366; font-size:18px;">▶ Iniciar Video</button>
   </div>
 
-  <video id="interactiveVideo" playsinline webkit-playsinline></video>
+  <video id="interactiveVideo" playsinline webkit-playsinline muted preload="auto"></video>
 
   <button id="triggerBtn" onclick="abrirModal()">✨ ¡Participa Aquí! ✨</button>
 
   <div id="overlayModal">
+    <button class="close-modal-btn" onclick="cerrarModal()" aria-label="Cerrar">✕</button>
+
+    <!-- Paso 1: Usuario -->
     <div id="stepUsuario">
       <div class="form-group">
-        <label>Ingresa las 4 letras de tu CURP y dia de cumpleaños (4 letras y 2 números):</label>
-        <input type="text" id="inputUsuario" placeholder="EJ. ABCD12" maxlength="6" style="text-transform: uppercase;">
+        <label>Ingresa las 4 letras de tu CURP y día de cumpleaños (6 caracteres):</label>
+        <input type="text" id="inputUsuario" placeholder="EJ. SERV16" maxlength="6" enterkeyhint="go" autocapitalize="characters" autocomplete="off" style="text-transform: uppercase;">
       </div>
       <button id="btnContinuarUsuario" class="btn-action" onclick="validarUsuario()">Continuar</button>
     </div>
 
+    <!-- Paso 2A: Registro Previo -->
     <div id="stepPrevio" style="display:none;">
       <div class="summary-card">
         <p><strong>Nombre:</strong> <span id="lblPrevioNombre"></span></p>
@@ -365,6 +406,7 @@
       </div>
     </div>
 
+    <!-- Paso 2B: Asistencia -->
     <div id="stepAsistencia" style="display:none;">
       <div class="form-group">
         <label>Nombre Completo:</label>
@@ -373,7 +415,7 @@
 
       <div class="form-group">
         <label>Número de Celular (10 dígitos):</label>
-        <input type="tel" id="txtCelular" placeholder="Ej. 5512345678" maxlength="10">
+        <input type="tel" id="txtCelular" placeholder="Ej. 5512345678" maxlength="10" enterkeyhint="done">
       </div>
 
       <div class="emoji-title">Elige tu confirmación:</div>
@@ -400,14 +442,16 @@
 </div>
 
 <script>
-  const VIDEO_URL = "https://www.dropbox.com/scl/fi/ydk0nhxxyjq8wcw8w1agj/2DA-LLAMADA-FIESTA-2026-V.3-ligth.mp4?rlkey=nvjl958ffx8nd1th8c9mc96cr&st=nj0dwzxg&raw=1";
-  const API_URL = "https://script.google.com/macros/s/AKfycbxQtiPkf6OLFs2rs5OnpZI_di7ghT7LjDwjMKjMleTWujku3cV_fSvJ31rEte9F_0Rf/exec";
-  const SEGUNDO_APARICION = 20;
+  const VIDEO_URL = "https://www.dropbox.com/scl/fi/z7vuqjalnza5r3smpd29g/2DA-LLAMADA-FIESTA-2026-V.4-ligth.mp4?rlkey=lkw5iewndz36uyz1tmjwi5obu&st=qfbd01yj&raw=1";
+  const API_URL = "https://script.google.com/macros/s/AKfycbxQtiPkf6OLFs2rs5OnpZl_di7ghT7LjDwjMKjMIeTWujku3cV_fSvJ31rEte9F_0ReoA/exec";
+  const SEGUNDO_APARICION = 5;
 
   const video = document.getElementById('interactiveVideo');
   const triggerBtn = document.getElementById('triggerBtn');
   const modal = document.getElementById('overlayModal');
   const statusBox = document.getElementById('statusBox');
+  const inputUsuario = document.getElementById('inputUsuario');
+  const txtCelular = document.getElementById('txtCelular');
 
   let sesion = {
     usuario: '',
@@ -418,22 +462,43 @@
 
   let queryTimer = null;
 
-  document.getElementById('inputUsuario').addEventListener('input', function() {
-    this.value = this.value.toUpperCase();
+  // Control inteligente de entrada en Usuario:
+  // Convierte a mayúsculas y al llegar a 6 caracteres oculta teclado y valida automáticamente
+  inputUsuario.addEventListener('input', function() {
+    this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (this.value.length === 6) {
+      this.blur(); // Baja el teclado virtual en Android e iOS
+      validarUsuario();
+    }
   });
 
-  // Retención de reproducción al rotar el teléfono
+  // Soporte para la tecla "Ir" / "Enter" del teclado móvil
+  inputUsuario.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      this.blur();
+      validarUsuario();
+    }
+  });
+
+  // Ocultar teclado automáticamente al completar los 10 dígitos del celular
+  txtCelular.addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '');
+    if (this.value.length === 10) {
+      this.blur();
+    }
+  });
+
   window.addEventListener('orientationchange', () => {
     const current = video.currentTime;
     const wasPlaying = !video.paused;
     setTimeout(() => {
       video.currentTime = current;
-      if (wasPlaying) video.play();
+      if (wasPlaying) video.play().catch(() => {});
     }, 200);
   });
 
-  // Carga con soporte de búfer
-  window.addEventListener('load', () => {
+  function inicializarApp() {
     const loadingContent = document.getElementById('loadingContent');
     const progressBar = document.getElementById('progressBar');
     const loaderStatus = document.getElementById('loaderStatus');
@@ -443,11 +508,10 @@
     let startTime = Date.now();
     let timerInterval = setInterval(() => {
       let elapsed = Math.floor((Date.now() - startTime) / 1000);
-      timerCountdown.innerText = `Descargando invitacion... ${elapsed}s transcurridos`;
+      timerCountdown.innerText = `Descargando paquete optimizado: ${elapsed}s transcurridos`;
     }, 1000);
 
     video.src = VIDEO_URL;
-    video.preload = "auto";
     video.load();
 
     video.addEventListener('progress', () => {
@@ -466,6 +530,11 @@
     }
 
     video.addEventListener('canplaythrough', activarInicio, { once: true });
+    video.addEventListener('loadeddata', () => {
+      setTimeout(() => {
+        if (playBtn.style.display === 'none') activarInicio();
+      }, 3000);
+    }, { once: true });
 
     if (video.readyState >= 3) {
       activarInicio();
@@ -474,18 +543,20 @@
     playBtn.onclick = () => {
       document.getElementById('loaderScreen').style.display = 'none';
       video.controls = true;
+      video.muted = false;
 
-      // Pantalla completa en Android / navegadores estándar
-      const container = document.getElementById('videoContainer');
-      if (container.requestFullscreen) {
-        container.requestFullscreen().catch(() => {});
-      } else if (container.webkitRequestFullscreen) {
-        container.webkitRequestFullscreen();
-      }
-
-      video.play();
+      video.play().catch(() => {
+        video.muted = true;
+        video.play();
+      });
     };
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', inicializarApp);
+  } else {
+    inicializarApp();
+  }
 
   video.addEventListener('timeupdate', () => {
     if (video.currentTime >= SEGUNDO_APARICION && triggerBtn.style.display !== 'block' && modal.style.display !== 'block') {
@@ -496,20 +567,34 @@
   function abrirModal() {
     triggerBtn.style.display = 'none';
     modal.style.display = 'block';
+    setTimeout(() => {
+      if (document.getElementById('stepUsuario').style.display !== 'none') {
+        inputUsuario.focus();
+      }
+    }, 150);
+  }
+
+  function cerrarModal() {
+    if (document.activeElement) document.activeElement.blur();
+    modal.style.display = 'none';
+    triggerBtn.style.display = 'block';
   }
 
   async function validarUsuario() {
-    const userInput = document.getElementById('inputUsuario').value.trim().toUpperCase();
+    const userInput = inputUsuario.value.trim().toUpperCase();
     const btnContinuar = document.getElementById('btnContinuarUsuario');
+
+    if (btnContinuar.disabled) return; // Evitar doble consulta si auto-avance y Enter coinciden
 
     if (userInput.length !== 6) {
       mostrarError("El usuario debe tener exactamente 6 caracteres (4 letras y 2 números)");
       return;
     }
 
+    inputUsuario.blur();
     btnContinuar.disabled = true;
     btnContinuar.innerText = "Consultando...";
-    iniciarCargaConsulta("Buscando usuario");
+    iniciarCargaConsulta("Buscando usuario en la base de datos");
 
     try {
       const response = await fetch(`${API_URL}?action=validarUsuario&usuario=${encodeURIComponent(userInput)}`);
@@ -595,18 +680,20 @@
 
   function prepararFormularioAsistencia(nombre, celular) {
     document.getElementById('txtNombre').value = nombre;
-    document.getElementById('txtCelular').value = celular;
+    txtCelular.value = celular;
     document.getElementById('stepAsistencia').style.display = 'block';
   }
 
   async function guardarEleccion(emojiTexto) {
-    const cel = document.getElementById('txtCelular').value.replace(/\D/g, '').trim();
+    const cel = txtCelular.value.replace(/\D/g, '').trim();
 
     if (cel.length < 10) {
       mostrarError("Por favor ingresa un número de celular válido a 10 dígitos");
+      txtCelular.focus();
       return;
     }
 
+    txtCelular.blur();
     iniciarCargaConsulta("Guardando tu respuesta");
 
     const payload = {
