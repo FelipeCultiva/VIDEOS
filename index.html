@@ -148,7 +148,7 @@
       100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 128, 0); }
     }
 
-    /* Modal posicionado en la parte superior para quedar libre del teclado virtual */
+    /* Modal posicionado en la parte superior */
     #overlayModal {
       position: fixed;
       top: 10%;
@@ -297,6 +297,45 @@
       cursor: pointer;
     }
 
+    /* Botones de Hospedaje */
+    .lodging-title {
+      font-size: 17px;
+      font-weight: 800;
+      color: #fff;
+      margin: 8px 0 6px 0;
+    }
+    .lodging-subtitle {
+      font-size: 13px;
+      color: #a0aec0;
+      margin-bottom: 16px;
+    }
+    .lodging-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .lodging-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 10px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      cursor: pointer;
+      transition: transform 0.15s ease;
+    }
+    .lodging-card:active { transform: scale(0.95); }
+    .lodging-yes {
+      border: 2px solid #10b981;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+    }
+    .lodging-yes span { color: #34d399; font-weight: bold; font-size: 14px; }
+    .lodging-no {
+      border: 2px solid #64748b;
+    }
+    .lodging-no span { color: #e2e8f0; font-weight: bold; font-size: 14px; }
+
     .emoji-title {
       font-size: 14px;
       color: #e2e8f0;
@@ -344,6 +383,51 @@
     }
     .card-perder .emoji-label { color: #f87171; }
 
+    /* Capa de animación gigante del Emoji */
+    #emojiCelebrationLayer {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      background: rgba(0, 0, 0, 0.45);
+    }
+    #giantEmoji {
+      font-size: 220px;
+      line-height: 1;
+      filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.6));
+      animation: shrinkToCard 1.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes shrinkToCard {
+      0% {
+        transform: scale(1.25) translateY(15vh);
+        opacity: 0.2;
+      }
+      25% {
+        transform: scale(1) translateY(5vh);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(0.22) translateY(-105vh);
+        opacity: 0;
+      }
+    }
+
+    /* Icono final asentado dentro de la tarjeta de respuesta */
+    .final-badge-emoji {
+      display: inline-block;
+      font-size: 46px;
+      margin-bottom: 8px;
+      animation: popInBadge 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popInBadge {
+      0% { transform: scale(2.2); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
     .status-msg {
       margin-top: 14px;
       padding: 14px;
@@ -364,6 +448,11 @@
   <div id="rotateNotice">
     <span class="phone-icon">📱</span>
     <span>Gira tu teléfono en horizontal para ver mejor el video</span>
+  </div>
+
+  <!-- Capa para animación de emoji gigante -->
+  <div id="emojiCelebrationLayer">
+    <div id="giantEmoji">😄</div>
   </div>
 
   <div id="loaderScreen">
@@ -398,7 +487,8 @@
       <div class="summary-card">
         <p><strong>Nombre:</strong> <span id="lblPrevioNombre"></span></p>
         <p><strong>Celular:</strong> <span id="lblPrevioCel"></span></p>
-        <p><strong>Respuesta actual:</strong> <span id="lblPrevioResp" style="font-weight:bold; color:#fbbf24;"></span></p>
+        <p><strong>Asistencia:</strong> <span id="lblPrevioResp" style="font-weight:bold; color:#fbbf24;"></span></p>
+        <p><strong>Hospedaje:</strong> <span id="lblPrevioHosp" style="font-weight:bold; color:#34d399;"></span></p>
       </div>
       <p style="font-size:14px; margin-bottom:8px;">¿Deseas modificar tu respuesta?</p>
       <div class="btn-dual-container">
@@ -421,19 +511,36 @@
 
       <div class="emoji-title">Elige tu confirmación:</div>
       <div class="emoji-grid">
-        <div class="emoji-card card-asistire" onclick="guardarEleccion('😄 Asistiré')">
+        <div class="emoji-card card-asistire" onclick="seleccionarAsistencia('😄 Asistiré')">
           <div class="emoji-icon">😄</div>
           <div class="emoji-label">Asistiré</div>
         </div>
 
-        <div class="emoji-card card-pensando" onclick="guardarEleccion('🤔 Lo estoy pensando')">
+        <div class="emoji-card card-pensando" onclick="seleccionarAsistencia('🤔 Lo estoy pensando')">
           <div class="emoji-icon">🤔</div>
           <div class="emoji-label">Lo estoy pensando</div>
         </div>
 
-        <div class="emoji-card card-perder" onclick="guardarEleccion('😢 Me lo voy a perder')">
+        <div class="emoji-card card-perder" onclick="seleccionarAsistencia('😢 Me lo voy a perder')">
           <div class="emoji-icon">😢</div>
           <div class="emoji-label">Me lo voy a perder</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paso 2C: Pregunta Condicional de Hospedaje (Solo si eligió Asistiré) -->
+    <div id="stepHospedaje" style="display:none;">
+      <div style="font-size: 38px; margin-bottom: 4px;">🏨</div>
+      <div class="lodging-title">¿Requieres Hospedaje?</div>
+      <div class="lodging-subtitle">Confirma si necesitarás habitación para el evento</div>
+      <div class="lodging-grid">
+        <div class="lodging-card lodging-yes" onclick="confirmarHospedaje('Sí')">
+          <div style="font-size: 28px; margin-bottom: 6px;">✅</div>
+          <span>Sí, requiero</span>
+        </div>
+        <div class="lodging-card lodging-no" onclick="confirmarHospedaje('No')">
+          <div style="font-size: 28px; margin-bottom: 6px;">🏠</div>
+          <span>No requiero</span>
         </div>
       </div>
     </div>
@@ -447,7 +554,6 @@
   const API_URL = "https://script.google.com/macros/s/AKfycbxQtiPkf6OLFs2rs5OnpZI_di7ghT7LjDwjMKjMleTWujku3cV_fSvJ31rEte9F_0Rf/exec";
   const SEGUNDO_APARICION = 30;
 
-  // Regla estricta: exactamente 4 letras seguidas de 2 números
   const FORMATO_USUARIO_REGEX = /^[A-Z]{4}[0-9]{2}$/;
 
   const video = document.getElementById('interactiveVideo');
@@ -461,6 +567,8 @@
     usuario: '',
     nombre: '',
     celular: '',
+    respuesta: '',
+    hospedaje: 'No aplica',
     esModificacion: false
   };
 
@@ -468,14 +576,100 @@
   let debounceTimer = null;
   let activeRequestId = 0;
 
+  // ==========================================
+  // SINTETIZADOR DE EFECTOS DE SONIDO (WEB AUDIO API)
+  // ==========================================
+  function reproducirEfectoSonido(tipo) {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      if (ctx.state === 'suspended') ctx.resume();
+
+      // Atenuar brevemente el volumen del video para que luzca el efecto
+      const volOriginal = video.volume;
+      if (!video.paused && !video.muted) {
+        video.volume = 0.2;
+        setTimeout(() => { video.volume = volOriginal; }, 1600);
+      }
+
+      const now = ctx.currentTime;
+
+      if (tipo === 'celebracion') {
+        // Fanfarria brillante ascendente (Do - Mi - Sol - Do alto)
+        const notas = [523.25, 659.25, 783.99, 1046.50];
+        notas.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + i * 0.11);
+          gain.gain.setValueAtTime(0.001, now + i * 0.11);
+          gain.gain.exponentialRampToValueAtTime(0.28, now + i * 0.11 + 0.03);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.11 + 0.45);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + i * 0.11);
+          osc.stop(now + i * 0.11 + 0.48);
+        });
+      } else if (tipo === 'duda') {
+        // Tono neutro/apatía ("Hmm...") dos notas suspendidas
+        const notas = [392.00, 349.23];
+        notas.forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, now + i * 0.28);
+          gain.gain.setValueAtTime(0.001, now + i * 0.28);
+          gain.gain.exponentialRampToValueAtTime(0.22, now + i * 0.28 + 0.04);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.28 + 0.35);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now + i * 0.28);
+          osc.stop(now + i * 0.28 + 0.38);
+        });
+      } else if (tipo === 'tristeza') {
+        // Descenso melancólico suave ("Aww...")
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440.00, now);
+        osc.frequency.exponentialRampToValueAtTime(246.94, now + 0.85);
+        gain.gain.setValueAtTime(0.001, now);
+        gain.gain.exponentialRampToValueAtTime(0.25, now + 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.95);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 1.0);
+      }
+    } catch (e) {
+      // Silencioso si el dispositivo restringe audio
+    }
+  }
+
+  // Animación de emoji gigante que se reduce hasta su lugar final
+  function lanzarAnimacionEmoji(emojiChar, tipoSonido) {
+    reproducirEfectoSonido(tipoSonido);
+
+    const layer = document.getElementById('emojiCelebrationLayer');
+    const giant = document.getElementById('giantEmoji');
+    giant.innerText = emojiChar;
+
+    // Reiniciar animación CSS
+    giant.style.animation = 'none';
+    giant.offsetHeight; // Forzar reflow
+    giant.style.animation = 'shrinkToCard 1.35s cubic-bezier(0.22, 1, 0.36, 1) forwards';
+
+    layer.style.display = 'flex';
+    setTimeout(() => {
+      layer.style.display = 'none';
+    }, 1350);
+  }
+
   // Control estricto al teclear el usuario (4 letras seguidas de 2 números)
   inputUsuario.addEventListener('input', function() {
     clearTimeout(debounceTimer);
-    
-    // Limpiar caracteres no alfanuméricos y forzar mayúsculas
     let raw = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-    
-    // Filtrar posición por posición: posiciones 0-3 solo letras, posiciones 4-5 solo números
     let clean = '';
     for (let i = 0; i < raw.length && i < 6; i++) {
       if (i < 4) {
@@ -486,12 +680,10 @@
     }
     this.value = clean;
 
-    // Si había un mensaje de error previo, ocultarlo al empezar a corregir
     if (statusBox.classList.contains('error')) {
       ocultarStatus();
     }
 
-    // Auto-disparo seguro solo si cumple con 4 letras + 2 números
     if (FORMATO_USUARIO_REGEX.test(clean)) {
       debounceTimer = setTimeout(() => {
         this.blur();
@@ -500,7 +692,6 @@
     }
   });
 
-  // Soporte para la tecla "Ir" / "Enter"
   inputUsuario.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -510,7 +701,6 @@
     }
   });
 
-  // Ocultar teclado al completar los 10 dígitos del celular
   txtCelular.addEventListener('input', function() {
     this.value = this.value.replace(/\D/g, '');
     if (this.value.length === 10) {
@@ -609,7 +799,6 @@
     triggerBtn.style.display = 'block';
   }
 
-  // Motor Híbrido (Fetch estándar + Respaldo JSONP) para máxima compatibilidad Android / iOS
   async function validarUsuario() {
     const userInput = inputUsuario.value.trim().toUpperCase();
     const btnContinuar = document.getElementById('btnContinuarUsuario');
@@ -628,7 +817,6 @@
     const targetUrl = `${API_URL}?action=validarUsuario&usuario=${encodeURIComponent(userInput)}&t=${Date.now()}`;
 
     try {
-      // 1er Intento: Fetch nativo con seguimiento de redirecciones
       const response = await fetch(targetUrl, {
         method: 'GET',
         redirect: 'follow'
@@ -637,11 +825,10 @@
       if (!response.ok) throw new Error("HTTP " + response.status);
       const res = await response.json();
 
-      if (currentReqId !== activeRequestId) return; // Ignorar si el usuario ya lanzó otra búsqueda
+      if (currentReqId !== activeRequestId) return;
       procesarRespuestaUsuario(res, btnContinuar);
 
     } catch (fetchErr) {
-      // 2do Intento automático (Respaldo JSONP por si Safari/WebView bloqueó el redirect CORS)
       if (currentReqId !== activeRequestId) return;
       consultarViaJsonp(userInput, currentReqId, btnContinuar);
     }
@@ -702,6 +889,7 @@
         document.getElementById('lblPrevioNombre').innerText = res.nombre;
         document.getElementById('lblPrevioCel').innerText = res.celular || 'No registrado';
         document.getElementById('lblPrevioResp').innerText = res.respuestaPrevia;
+        document.getElementById('lblPrevioHosp').innerText = res.hospedajePrevio || 'No aplica';
         document.getElementById('stepPrevio').style.display = 'block';
       } else {
         sesion.esModificacion = false;
@@ -762,7 +950,8 @@
     document.getElementById('stepAsistencia').style.display = 'block';
   }
 
-  async function guardarEleccion(emojiTexto) {
+  // Paso intermedio al elegir emoji de asistencia
+  function seleccionarAsistencia(emojiTexto) {
     const cel = txtCelular.value.replace(/\D/g, '').trim();
 
     if (cel.length < 10) {
@@ -772,13 +961,56 @@
     }
 
     txtCelular.blur();
+    ocultarStatus();
+    sesion.celular = cel;
+    sesion.respuesta = emojiTexto;
+
+    if (emojiTexto.includes('Asistiré')) {
+      // Si asistirá, mostrar pregunta condicional de Hospedaje antes de guardar
+      document.getElementById('stepAsistencia').style.display = 'none';
+      document.getElementById('stepHospedaje').style.display = 'block';
+    } else {
+      // Si eligió otra opción, hospedaje es "No aplica" y guarda directamente
+      sesion.hospedaje = "No aplica";
+      ejecutarGuardadoFinal();
+    }
+  }
+
+  // Confirmación de hospedaje (Sí / No)
+  function confirmarHospedaje(opcionHospedaje) {
+    sesion.hospedaje = opcionHospedaje;
+    document.getElementById('stepHospedaje').style.display = 'none';
+    ejecutarGuardadoFinal();
+  }
+
+  // Guardado final con animación gigante y efecto de sonido
+  async function ejecutarGuardadoFinal() {
+    document.getElementById('stepAsistencia').style.display = 'none';
+    document.getElementById('stepHospedaje').style.display = 'none';
+
+    // Determinar emoji y sonido según elección
+    let emojiSolo = '😄';
+    let tipoSonido = 'celebracion';
+
+    if (sesion.respuesta.includes('pensando')) {
+      emojiSolo = '🤔';
+      tipoSonido = 'duda';
+    } else if (sesion.respuesta.includes('perder')) {
+      emojiSolo = '😢';
+      tipoSonido = 'tristeza';
+    }
+
+    // Disparar animación de carita gigante + sonido
+    lanzarAnimacionEmoji(emojiSolo, tipoSonido);
+
     iniciarCargaConsulta("Guardando tu respuesta");
 
     const payload = {
       usuario: sesion.usuario,
       nombre: sesion.nombre,
-      celular: cel,
-      respuesta: emojiTexto,
+      celular: sesion.celular,
+      respuesta: sesion.respuesta,
+      hospedaje: sesion.hospedaje,
       segundoVideo: Math.floor(video.currentTime),
       esModificacion: sesion.esModificacion
     };
@@ -796,9 +1028,16 @@
       detenerCargaConsulta();
 
       if (res.status === 'EXITO') {
-        document.getElementById('stepAsistencia').style.display = 'none';
+        const detalleHospedaje = sesion.respuesta.includes('Asistiré')
+          ? `<br><span style="font-size:13px; color:#a7f3d0;">Hospedaje: <strong>${sesion.hospedaje}</strong></span>`
+          : '';
+
         statusBox.className = "status-msg success";
-        statusBox.innerHTML = res.mensaje;
+        statusBox.innerHTML = `
+          <div class="final-badge-emoji">${emojiSolo}</div>
+          <div>${res.mensaje}</div>
+          ${detalleHospedaje}
+        `;
         statusBox.style.display = 'block';
       } else {
         mostrarError(res.mensaje || "Error al procesar el guardado");
