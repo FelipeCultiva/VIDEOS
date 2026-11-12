@@ -580,11 +580,11 @@
     triggerBtn.style.display = 'block';
   }
 
-  async function validarUsuario() {
+  function validarUsuario() {
     const userInput = inputUsuario.value.trim().toUpperCase();
     const btnContinuar = document.getElementById('btnContinuarUsuario');
 
-    if (btnContinuar.disabled) return; // Evitar doble consulta si auto-avance y Enter coinciden
+    if (btnContinuar.disabled) return;
 
     if (userInput.length !== 6) {
       mostrarError("El usuario debe tener exactamente 6 caracteres (4 letras y 2 números)");
@@ -596,10 +596,26 @@
     btnContinuar.innerText = "Consultando...";
     iniciarCargaConsulta("Buscando usuario en la base de datos");
 
-    try {
-      const response = await fetch(`${API_URL}?action=validarUsuario&usuario=${encodeURIComponent(userInput)}`);
-      const res = await response.json();
+    // Crear llamada JSONP inmune a bloqueos CORS / Load failed en iOS Safari
+    const callbackName = 'jsonp_cb_' + Math.round(100000 * Math.random());
+    const script = document.createElement('script');
 
+    // Tiempo límite de 15 segundos por si no hay respuesta del servidor
+    const timeoutId = setTimeout(() => {
+      limpiarJsonp();
+      btnContinuar.disabled = false;
+      btnContinuar.innerText = "Continuar";
+      mostrarError("Tiempo de espera agotado. Verifica que la API de Apps Script esté pública ('Cualquiera').");
+    }, 15000);
+
+    function limpiarJsonp() {
+      clearTimeout(timeoutId);
+      delete window[callbackName];
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    window[callbackName] = function(res) {
+      limpiarJsonp();
       detenerCargaConsulta();
       btnContinuar.disabled = false;
       btnContinuar.innerText = "Continuar";
@@ -626,12 +642,18 @@
       } else {
         mostrarError(res.mensaje || "Error al conectar con la base de datos");
       }
-    } catch (err) {
+    };
+
+    script.onerror = function() {
+      limpiarJsonp();
       detenerCargaConsulta();
       btnContinuar.disabled = false;
       btnContinuar.innerText = "Continuar";
-      mostrarError("Fallo de conexión: " + err.message);
-    }
+      mostrarError("No se pudo conectar con Google Sheets. Verifica los permisos de la Web App ('Cualquiera').");
+    };
+
+    script.src = `${API_URL}?action=validarUsuario&usuario=${encodeURIComponent(userInput)}&callback=${callbackName}`;
+    document.body.appendChild(script);
   }
 
   function iniciarCargaConsulta(mensaje) {
