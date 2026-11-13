@@ -12,59 +12,30 @@
   <meta property="og:image" content="https://felipecultiva.github.io/VIDEOS/SEGUNDA%20LLAMADA.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
-  <meta name="theme-color" content="#ff007f">
+  <meta name="theme-color" content="#000000">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body, html { width: 100%; height: 100%; height: 100dvh; background: #000; overflow: hidden; }
-
-    /* Aviso superior para rotar pantalla en vertical */
-    #rotateNotice {
-      position: absolute;
-      top: 14px;
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 40;
-      background: rgba(20, 24, 33, 0.88);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      color: #fff;
-      padding: 9px 16px;
-      border-radius: 30px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 13px;
-      font-weight: 600;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-      pointer-events: none;
-      width: 90%;
-      max-width: 360px;
-      justify-content: center;
-      text-align: center;
+    
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      background: #000;
+      overflow-x: hidden;
     }
 
-    .phone-icon {
-      font-size: 18px;
-      display: inline-block;
-      animation: rotatePhone 2.5s infinite ease-in-out;
-    }
-
-    @keyframes rotatePhone {
-      0%, 20% { transform: rotate(0deg); }
-      50%, 70% { transform: rotate(90deg); }
-      100% { transform: rotate(0deg); }
-    }
-
+    /* En horizontal se habilita 1px extra para que Safari iOS contraiga la barra de direcciones */
     @media (orientation: landscape) {
-      #rotateNotice {
-        display: none !important;
+      html, body {
+        min-height: calc(100vh + 1px);
       }
     }
 
     .video-wrapper {
-      position: relative;
+      position: fixed;
+      inset: 0;
       width: 100vw;
       height: 100vh;
       height: 100dvh;
@@ -72,6 +43,7 @@
       justify-content: center;
       align-items: center;
       background: #000;
+      padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     }
 
     video {
@@ -81,10 +53,94 @@
       background: #000;
     }
 
+    /* Ícono dinámico de girar celular (solo visible en modo vertical) */
+    #rotateBtn {
+      position: fixed;
+      top: calc(16px + env(safe-area-inset-top));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 40;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(18, 20, 29, 0.85);
+      border: 1.5px solid rgba(255, 255, 255, 0.28);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.75);
+      cursor: pointer;
+      touch-action: manipulation;
+      animation: glowRotateBtn 2.5s infinite ease-in-out;
+    }
+
+    #rotateBtn:active {
+      transform: translateX(-50%) scale(0.92);
+    }
+
+    @keyframes glowRotateBtn {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 0, 128, 0.45); border-color: rgba(255, 255, 255, 0.3); }
+      50% { box-shadow: 0 0 0 10px rgba(255, 0, 128, 0); border-color: rgba(255, 0, 128, 0.8); }
+    }
+
+    /* Animación de flechas circulares y teléfono girando dentro del SVG */
+    .arrows-ring {
+      transform-origin: 24px 24px;
+      animation: spinArrows 4s linear infinite;
+    }
+
+    .phone-device {
+      transform-origin: 24px 24px;
+      animation: tiltPhone 2.6s ease-in-out infinite;
+    }
+
+    @keyframes spinArrows {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes tiltPhone {
+      0%, 15% { transform: rotate(0deg); }
+      45%, 70% { transform: rotate(-90deg); }
+      95%, 100% { transform: rotate(0deg); }
+    }
+
+    /* Ocultar el ícono de rotación cuando ya está en horizontal */
+    @media (orientation: landscape) {
+      #rotateBtn {
+        display: none !important;
+      }
+    }
+
+    /* Botón discreto en horizontal para salir del modo forzado si el usuario quiere volver a vertical */
+    #exitLandscapeBtn {
+      position: fixed;
+      top: calc(12px + env(safe-area-inset-top));
+      left: calc(14px + env(safe-area-inset-left));
+      z-index: 40;
+      background: rgba(18, 20, 29, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
     /* Pantalla de precarga */
     #loaderScreen {
-      position: absolute;
-      top: 0; left: 0; width: 100%; height: 100%;
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       background: #0f1115;
       display: flex;
       flex-direction: column;
@@ -153,8 +209,8 @@
 
     /* Botón flotante interactivo */
     #triggerBtn {
-      position: absolute;
-      bottom: 75px;
+      position: fixed;
+      bottom: calc(68px + env(safe-area-inset-bottom));
       left: 50%;
       transform: translateX(-50%);
       background: linear-gradient(135deg, #ff007f, #7928ca);
@@ -173,6 +229,14 @@
       animation: pulseBtn 1.4s infinite;
       white-space: nowrap;
       touch-action: manipulation;
+    }
+
+    @media (orientation: landscape) {
+      #triggerBtn {
+        bottom: calc(48px + env(safe-area-inset-bottom));
+        padding: 12px 28px;
+        font-size: 15px;
+      }
     }
 
     @keyframes pulseBtn {
@@ -444,33 +508,14 @@
     }
 
     @keyframes shrinkToCard {
-      0% {
-        transform: scale(0.3) translateY(15vh);
-        opacity: 0;
-      }
-      18% {
-        transform: scale(1.15) translateY(2vh);
-        opacity: 1;
-      }
-      30% {
-        transform: scale(1.0) translateY(2vh);
-        opacity: 1;
-      }
-      45% {
-        transform: scale(1.08) translateY(2vh);
-        opacity: 1;
-      }
-      60% {
-        transform: scale(1.0) translateY(2vh);
-        opacity: 1;
-      }
-      100% {
-        transform: scale(0.21) translateY(-102vh);
-        opacity: 0;
-      }
+      0% { transform: scale(0.3) translateY(15vh); opacity: 0; }
+      18% { transform: scale(1.15) translateY(2vh); opacity: 1; }
+      30% { transform: scale(1.0) translateY(2vh); opacity: 1; }
+      45% { transform: scale(1.08) translateY(2vh); opacity: 1; }
+      60% { transform: scale(1.0) translateY(2vh); opacity: 1; }
+      100% { transform: scale(0.21) translateY(-102vh); opacity: 0; }
     }
 
-    /* Icono final asentado dentro de la tarjeta de respuesta */
     .final-badge-emoji {
       display: inline-block;
       font-size: 48px;
@@ -499,10 +544,27 @@
 <body>
 
 <div class="video-wrapper" id="videoContainer">
-  <div id="rotateNotice">
-    <span class="phone-icon">📱</span>
-    <span>Gira tu teléfono en horizontal para ver mejor el video</span>
-  </div>
+  <!-- Ícono dinámico SVG: Celular girando rodeado de flechas circulares (y botón de rotación en Android) -->
+  <button id="rotateBtn" type="button" onclick="activarHorizontal()" aria-label="Girar pantalla a horizontal" title="Girar a horizontal">
+    <svg width="42" height="42" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Flechas circulares en movimiento -->
+      <g class="arrows-ring" stroke="#ff007f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M 24 5 A 19 19 0 0 1 42.2 18.5" />
+        <polyline points="43.5 13 42.3 18.8 36.6 17.5" />
+        <path d="M 24 43 A 19 19 0 0 1 5.8 29.5" />
+        <polyline points="4.5 35 5.7 29.2 11.4 30.5" />
+      </g>
+      <!-- Teléfono animado girando de vertical a horizontal -->
+      <g class="phone-device">
+        <rect x="17" y="12" width="14" height="24" rx="2.5" fill="rgba(255,255,255,0.12)" stroke="#ffffff" stroke-width="2.2" />
+        <line x1="22" y1="15" x2="26" y2="15" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" />
+        <circle cx="24" cy="33" r="1.2" fill="#ffffff" />
+      </g>
+    </svg>
+  </button>
+
+  <!-- Botón discreto para restaurar vertical si se forzó horizontal -->
+  <button id="exitLandscapeBtn" type="button" onclick="salirHorizontal()" aria-label="Restaurar vertical" title="Salir de pantalla completa">⤢</button>
 
   <!-- Capa para animación de emoji gigante -->
   <div id="emojiCelebrationLayer">
@@ -515,9 +577,8 @@
       <div class="progress-bar-bg">
         <div id="progressBar" class="progress-fill"></div>
       </div>
-      <p id="timerCountdown">Descargando paquete optimizado: 0s transcurridos</p>
+      <p id="timerCountdown">Descargando ...: 0s transcurridos</p>
     </div>
-    <!-- Botón grande estilo píldora para Iniciar Video -->
     <button id="startPlayBtn" class="btn-play-hero" type="button">
       <span>▶</span>
       <span>Iniciar Video</span>
@@ -610,7 +671,7 @@
 <script>
   const VIDEO_URL = "https://www.dropbox.com/scl/fi/z7vuqjalnza5r3smpd29g/2DA-LLAMADA-FIESTA-2026-V.4-ligth.mp4?rlkey=lkw5iewndz36uyz1tmjwi5obu&st=tsxz36r4&raw=1";
   const API_URL = "https://script.google.com/macros/s/AKfycbxQtiPkf6OLFs2rs5OnpZI_di7ghT7LjDwjMKjMleTWujku3cV_fSvJ31rEte9F_0Rf/exec";
-  const SEGUNDO_APARICION = 5;
+  const SEGUNDO_APARICION = 30;
 
   const FORMATO_USUARIO_REGEX = /^[A-Z]{4}[0-9]{2}$/;
 
@@ -620,6 +681,7 @@
   const statusBox = document.getElementById('statusBox');
   const inputUsuario = document.getElementById('inputUsuario');
   const txtCelular = document.getElementById('txtCelular');
+  const exitLandscapeBtn = document.getElementById('exitLandscapeBtn');
 
   let sesion = {
     usuario: '',
@@ -633,17 +695,92 @@
   let queryTimer = null;
   let debounceTimer = null;
   let activeRequestId = 0;
+  let horizontalForzado = false;
+
+  // ==========================================
+  // CONTROL DE PANTALLA COMPLETA Y ORIENTACIÓN (iOS & ANDROID)
+  // ==========================================
+  async function activarHorizontal() {
+    try {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) {
+        await elem.requestFullscreen();
+      } else if (elem.webkitRequestFullscreen) {
+        await elem.webkitRequestFullscreen();
+      }
+
+      if (screen.orientation && screen.orientation.lock) {
+        await screen.orientation.lock('landscape');
+        horizontalForzado = true;
+        exitLandscapeBtn.style.display = 'flex';
+      }
+    } catch (err) {
+      // En iOS Safari no se permite lock() por software; se aplica el ajuste de scroll
+      ocultarBarraSafari();
+    }
+  }
+
+  function salirHorizontal() {
+    try {
+      if (screen.orientation && screen.orientation.unlock) {
+        screen.orientation.unlock();
+      }
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.exitFullscreen) document.exitFullscreen();
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }
+    } catch (e) {}
+    horizontalForzado = false;
+    exitLandscapeBtn.style.display = 'none';
+  }
+
+  // Detectar si el usuario sale de pantalla completa con gestos nativos de Android
+  document.addEventListener('fullscreenchange', () => {
+    if (!document.fullscreenElement) {
+      horizontalForzado = false;
+      exitLandscapeBtn.style.display = 'none';
+      if (screen.orientation && screen.orientation.unlock) {
+        try { screen.orientation.unlock(); } catch (e) {}
+      }
+    }
+  });
+
+  // Forzar contracción de barra de direcciones en Safari iOS al girar
+  function ocultarBarraSafari() {
+    setTimeout(() => {
+      window.scrollTo(0, 1);
+    }, 120);
+    setTimeout(() => {
+      window.scrollTo(0, 1);
+    }, 450);
+  }
+
+  window.addEventListener('orientationchange', () => {
+    const current = video.currentTime;
+    const wasPlaying = !video.paused;
+
+    ocultarBarraSafari();
+
+    setTimeout(() => {
+      video.currentTime = current;
+      if (wasPlaying) video.play().catch(() => {});
+    }, 250);
+  });
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > window.innerHeight) {
+      ocultarBarraSafari();
+    }
+  });
 
   // ==========================================
   // SINTETIZADOR ARMÓNICO DE 2.5 SEGUNDOS (WEB AUDIO API)
   // ==========================================
   function tocarNotaArmonica(ctx, freq, startTime, duration, maxGain, vibrato = false) {
-    // Oscilador fundamental (calidez tipo piano eléctrico)
     const osc1 = ctx.createOscillator();
     osc1.type = 'sine';
     osc1.frequency.setValueAtTime(freq, startTime);
 
-    // Oscilador armónico (brillo cristalino a la octava superior)
     const osc2 = ctx.createOscillator();
     osc2.type = 'triangle';
     osc2.frequency.setValueAtTime(freq * 2, startTime);
@@ -662,7 +799,6 @@
     const gain1 = ctx.createGain();
     const gain2 = ctx.createGain();
 
-    // Envolvente suave (ataque rápido, decaimiento largo tipo campana)
     gain1.gain.setValueAtTime(0.0001, startTime);
     gain1.gain.exponentialRampToValueAtTime(maxGain, startTime + 0.04);
     gain1.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
@@ -689,7 +825,6 @@
       const ctx = new AudioCtx();
       if (ctx.state === 'suspended') ctx.resume();
 
-      // Atenuar brevemente el audio del video durante los 2.5 segundos
       const volOriginal = video.volume;
       if (!video.paused && !video.muted) {
         video.volume = 0.15;
@@ -699,13 +834,11 @@
       const now = ctx.currentTime + 0.05;
 
       if (tipo === 'celebracion') {
-        // Fanfarria brillante en Do Mayor + acorde final sostenido (2.5s)
         const secuencia = [
-          { freq: 523.25, time: 0.00, dur: 0.65, vol: 0.24 }, // Do5
-          { freq: 659.25, time: 0.16, dur: 0.65, vol: 0.24 }, // Mi5
-          { freq: 783.99, time: 0.32, dur: 0.70, vol: 0.26 }, // Sol5
-          { freq: 987.77, time: 0.48, dur: 0.75, vol: 0.24 }, // Si5
-          // Acorde final radiante (Do5 + Mi5 + Sol5 + Do6)
+          { freq: 523.25, time: 0.00, dur: 0.65, vol: 0.24 },
+          { freq: 659.25, time: 0.16, dur: 0.65, vol: 0.24 },
+          { freq: 783.99, time: 0.32, dur: 0.70, vol: 0.26 },
+          { freq: 987.77, time: 0.48, dur: 0.75, vol: 0.24 },
           { freq: 523.25, time: 0.68, dur: 1.75, vol: 0.18 },
           { freq: 659.25, time: 0.68, dur: 1.75, vol: 0.18 },
           { freq: 783.99, time: 0.68, dur: 1.75, vol: 0.18 },
@@ -714,29 +847,24 @@
         secuencia.forEach(n => tocarNotaArmonica(ctx, n.freq, now + n.time, n.dur, n.vol, false));
 
       } else if (tipo === 'duda') {
-        // Motivo reflexivo tipo marimba / vibráfono suspendido (2.5s)
         const secuencia = [
-          { freq: 392.00, time: 0.00, dur: 0.75, vol: 0.22 }, // Sol4
-          { freq: 440.00, time: 0.55, dur: 0.75, vol: 0.22 }, // La4
-          { freq: 293.66, time: 1.15, dur: 1.30, vol: 0.25 }  // Re4 (suspensión)
+          { freq: 392.00, time: 0.00, dur: 0.75, vol: 0.22 },
+          { freq: 440.00, time: 0.55, dur: 0.75, vol: 0.22 },
+          { freq: 293.66, time: 1.15, dur: 1.30, vol: 0.25 }
         ];
         secuencia.forEach(n => tocarNotaArmonica(ctx, n.freq, now + n.time, n.dur, n.vol, false));
 
       } else if (tipo === 'tristeza') {
-        // Progresión melancólica lenta en La menor con vibrato expresivo (2.5s)
         const secuencia = [
-          { freq: 440.00, time: 0.00, dur: 0.95, vol: 0.23 }, // La4
-          { freq: 349.23, time: 0.75, dur: 0.95, vol: 0.23 }, // Fa4
-          { freq: 329.63, time: 1.45, dur: 1.05, vol: 0.26 }  // Mi4
+          { freq: 440.00, time: 0.00, dur: 0.95, vol: 0.23 },
+          { freq: 349.23, time: 0.75, dur: 0.95, vol: 0.23 },
+          { freq: 329.63, time: 1.45, dur: 1.05, vol: 0.26 }
         ];
         secuencia.forEach(n => tocarNotaArmonica(ctx, n.freq, now + n.time, n.dur, n.vol, true));
       }
-    } catch (e) {
-      // Silencioso si el dispositivo restringe audio
-    }
+    } catch (e) {}
   }
 
-  // Animación de emoji gigante durante 2.5 segundos
   function lanzarAnimacionEmoji(emojiChar, tipoSonido) {
     reproducirEfectoSonido(tipoSonido);
 
@@ -746,7 +874,7 @@
 
     giant.style.animation = 'none';
     layer.style.animation = 'none';
-    giant.offsetHeight; // Forzar reflow
+    giant.offsetHeight;
 
     giant.style.animation = 'shrinkToCard 2.5s cubic-bezier(0.22, 1, 0.36, 1) forwards';
     layer.style.animation = 'fadeBackdrop 2.5s ease-in-out forwards';
@@ -798,15 +926,6 @@
     }
   });
 
-  window.addEventListener('orientationchange', () => {
-    const current = video.currentTime;
-    const wasPlaying = !video.paused;
-    setTimeout(() => {
-      video.currentTime = current;
-      if (wasPlaying) video.play().catch(() => {});
-    }, 200);
-  });
-
   function inicializarApp() {
     const loadingContent = document.getElementById('loadingContent');
     const progressBar = document.getElementById('progressBar');
@@ -853,6 +972,9 @@
       document.getElementById('loaderScreen').style.display = 'none';
       video.controls = true;
       video.muted = false;
+
+      // Intentar modo horizontal / pantalla completa al iniciar reproducción
+      activarHorizontal();
 
       video.play().catch(() => {
         video.muted = true;
@@ -1084,7 +1206,6 @@
       tipoSonido = 'tristeza';
     }
 
-    // Disparar animación y melodía de 2.5 segundos
     lanzarAnimacionEmoji(emojiSolo, tipoSonido);
 
     iniciarCargaConsulta("Guardando tu respuesta");
