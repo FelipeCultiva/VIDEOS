@@ -26,7 +26,6 @@
       overflow-x: hidden;
     }
 
-    /* En horizontal se habilita 1px extra para que Safari iOS contraiga la barra de direcciones */
     @media (orientation: landscape) {
       html, body {
         min-height: calc(100vh + 1px);
@@ -85,7 +84,6 @@
       50% { box-shadow: 0 0 0 10px rgba(255, 0, 128, 0); border-color: rgba(255, 0, 128, 0.8); }
     }
 
-    /* Animación de flechas circulares y teléfono girando dentro del SVG */
     .arrows-ring {
       transform-origin: 24px 24px;
       animation: spinArrows 4s linear infinite;
@@ -107,7 +105,6 @@
       95%, 100% { transform: rotate(0deg); }
     }
 
-    /* Ocultar el ícono de rotación cuando ya está en horizontal */
     @media (orientation: landscape) {
       #rotateBtn {
         display: none !important;
@@ -547,14 +544,12 @@
   <!-- Ícono dinámico SVG: Celular girando rodeado de flechas circulares (y botón de rotación en Android) -->
   <button id="rotateBtn" type="button" onclick="activarHorizontal()" aria-label="Girar pantalla a horizontal" title="Girar a horizontal">
     <svg width="42" height="42" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Flechas circulares en movimiento -->
       <g class="arrows-ring" stroke="#ff007f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
         <path d="M 24 5 A 19 19 0 0 1 42.2 18.5" />
         <polyline points="43.5 13 42.3 18.8 36.6 17.5" />
         <path d="M 24 43 A 19 19 0 0 1 5.8 29.5" />
         <polyline points="4.5 35 5.7 29.2 11.4 30.5" />
       </g>
-      <!-- Teléfono animado girando de vertical a horizontal -->
       <g class="phone-device">
         <rect x="17" y="12" width="14" height="24" rx="2.5" fill="rgba(255,255,255,0.12)" stroke="#ffffff" stroke-width="2.2" />
         <line x1="22" y1="15" x2="26" y2="15" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" />
@@ -715,7 +710,6 @@
         exitLandscapeBtn.style.display = 'flex';
       }
     } catch (err) {
-      // En iOS Safari no se permite lock() por software; se aplica el ajuste de scroll
       ocultarBarraSafari();
     }
   }
@@ -734,7 +728,6 @@
     exitLandscapeBtn.style.display = 'none';
   }
 
-  // Detectar si el usuario sale de pantalla completa con gestos nativos de Android
   document.addEventListener('fullscreenchange', () => {
     if (!document.fullscreenElement) {
       horizontalForzado = false;
@@ -745,7 +738,6 @@
     }
   });
 
-  // Forzar contracción de barra de direcciones en Safari iOS al girar
   function ocultarBarraSafari() {
     setTimeout(() => {
       window.scrollTo(0, 1);
@@ -755,17 +747,39 @@
     }, 450);
   }
 
+  // Detectar cambio físico de orientación del teléfono
   window.addEventListener('orientationchange', () => {
     const current = video.currentTime;
     const wasPlaying = !video.paused;
 
-    ocultarBarraSafari();
+    // Si el usuario giró físicamente a vertical (0° o 180°), liberar el bloqueo horizontal
+    const angle = (screen.orientation && typeof screen.orientation.angle === 'number')
+      ? screen.orientation.angle
+      : window.orientation;
+
+    if (angle === 0 || angle === 180) {
+      if (horizontalForzado) {
+        salirHorizontal();
+      }
+    } else {
+      ocultarBarraSafari();
+    }
 
     setTimeout(() => {
       video.currentTime = current;
       if (wasPlaying) video.play().catch(() => {});
     }, 250);
   });
+
+  // Respaldo con MediaQuery para detectar regreso físico a vertical en navegadores modernos
+  const portraitMedia = window.matchMedia('(orientation: portrait)');
+  if (portraitMedia && portraitMedia.addEventListener) {
+    portraitMedia.addEventListener('change', (e) => {
+      if (e.matches && horizontalForzado) {
+        salirHorizontal();
+      }
+    });
+  }
 
   window.addEventListener('resize', () => {
     if (window.innerWidth > window.innerHeight) {
@@ -936,7 +950,7 @@
     let startTime = Date.now();
     let timerInterval = setInterval(() => {
       let elapsed = Math.floor((Date.now() - startTime) / 1000);
-      timerCountdown.innerText = `Descargando paquete optimizado: ${elapsed}s transcurridos`;
+      timerCountdown.innerText = `Descargando... ${elapsed}s transcurridos`;
     }, 1000);
 
     video.src = VIDEO_URL;
@@ -968,13 +982,11 @@
       activarInicio();
     }
 
+    // Inicia reproducción respetando la orientación natural (vertical) sin forzar horizontal
     playBtn.onclick = () => {
       document.getElementById('loaderScreen').style.display = 'none';
       video.controls = true;
       video.muted = false;
-
-      // Intentar modo horizontal / pantalla completa al iniciar reproducción
-      activarHorizontal();
 
       video.play().catch(() => {
         video.muted = true;
