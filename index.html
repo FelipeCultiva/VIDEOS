@@ -111,7 +111,7 @@
       }
     }
 
-    /* Botón discreto en horizontal para salir del modo forzado si el usuario quiere volver a vertical */
+    /* Botón discreto en horizontal para salir del modo forzado */
     #exitLandscapeBtn {
       position: fixed;
       top: calc(12px + env(safe-area-inset-top));
@@ -204,42 +204,71 @@
       100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
     }
 
-    /* Botón flotante interactivo */
+    /* ==========================================
+       BOTÓN FLOTANTE INTERACTIVO (2 FASES)
+       Fase 1: Protagonista grande al centro (5s)
+       Fase 2: Deslizamiento suave a posición anclada inferior
+       ========================================== */
     #triggerBtn {
       position: fixed;
-      bottom: calc(68px + env(safe-area-inset-bottom));
+      top: calc(100vh - 96px - env(safe-area-inset-bottom));
+      top: calc(100dvh - 96px - env(safe-area-inset-bottom));
       left: 50%;
-      transform: translateX(-50%);
+      transform: translate(-50%, 0) scale(1);
       background: linear-gradient(135deg, #ff007f, #7928ca);
       color: #fff;
-      border: 2px solid rgba(255, 255, 255, 0.85);
+      border: 2px solid rgba(255, 255, 255, 0.9);
       padding: 15px 34px;
       border-radius: 50px;
       font-size: 16px;
       font-weight: 900;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
       text-transform: uppercase;
-      box-shadow: 0 0 25px rgba(255, 0, 128, 0.7);
+      box-shadow: 0 0 25px rgba(255, 0, 128, 0.75);
       cursor: pointer;
       display: none;
-      z-index: 25;
-      animation: pulseBtn 1.4s infinite;
+      z-index: 30;
       white-space: nowrap;
       touch-action: manipulation;
+      transition: top 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+                  transform 0.85s cubic-bezier(0.22, 1, 0.36, 1),
+                  box-shadow 0.4s ease;
+      animation: pulseBtnDocked 1.5s infinite;
+    }
+
+    /* Estado Protagonista al centro de la pantalla */
+    #triggerBtn.hero-center {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(1.26);
+      border: 2.5px solid #fbbf24;
+      box-shadow: 0 0 40px rgba(255, 0, 128, 0.95), 0 0 80px rgba(121, 40, 202, 0.8);
+      animation: pulseBtnHero 1.15s infinite;
     }
 
     @media (orientation: landscape) {
       #triggerBtn {
-        bottom: calc(48px + env(safe-area-inset-bottom));
+        top: calc(100vh - 76px - env(safe-area-inset-bottom));
+        top: calc(100dvh - 76px - env(safe-area-inset-bottom));
         padding: 12px 28px;
         font-size: 15px;
       }
+      #triggerBtn.hero-center {
+        top: 50%;
+        transform: translate(-50%, -50%) scale(1.22);
+      }
     }
 
-    @keyframes pulseBtn {
-      0% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 128, 0.7); }
-      70% { transform: translateX(-50%) scale(1.06); box-shadow: 0 0 0 18px rgba(255, 0, 128, 0); }
-      100% { transform: translateX(-50%) scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 128, 0); }
+    @keyframes pulseBtnHero {
+      0% { transform: translate(-50%, -50%) scale(1.22); box-shadow: 0 0 0 0 rgba(255, 0, 128, 0.9), 0 0 35px rgba(251, 191, 36, 0.7); }
+      65% { transform: translate(-50%, -50%) scale(1.32); box-shadow: 0 0 0 26px rgba(255, 0, 128, 0), 0 0 50px rgba(251, 191, 36, 0.9); }
+      100% { transform: translate(-50%, -50%) scale(1.22); box-shadow: 0 0 0 0 rgba(255, 0, 128, 0), 0 0 35px rgba(251, 191, 36, 0.7); }
+    }
+
+    @keyframes pulseBtnDocked {
+      0% { transform: translate(-50%, 0) scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 128, 0.7); }
+      70% { transform: translate(-50%, 0) scale(1.06); box-shadow: 0 0 0 18px rgba(255, 0, 128, 0); }
+      100% { transform: translate(-50%, 0) scale(1); box-shadow: 0 0 0 0 rgba(255, 0, 128, 0); }
     }
 
     /* Modal posicionado en la parte superior */
@@ -541,7 +570,7 @@
 <body>
 
 <div class="video-wrapper" id="videoContainer">
-  <!-- Ícono dinámico SVG: Celular girando rodeado de flechas circulares (y botón de rotación en Android) -->
+  <!-- Ícono dinámico SVG: Celular girando rodeado de flechas circulares -->
   <button id="rotateBtn" type="button" onclick="activarHorizontal()" aria-label="Girar pantalla a horizontal" title="Girar a horizontal">
     <svg width="42" height="42" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
       <g class="arrows-ring" stroke="#ff007f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
@@ -572,7 +601,7 @@
       <div class="progress-bar-bg">
         <div id="progressBar" class="progress-fill"></div>
       </div>
-      <p id="timerCountdown">Descargando ...: 0s transcurridos</p>
+      <p id="timerCountdown">Descargando paquete optimizado: 0s transcurridos</p>
     </div>
     <button id="startPlayBtn" class="btn-play-hero" type="button">
       <span>▶</span>
@@ -582,10 +611,10 @@
 
   <video id="interactiveVideo" playsinline webkit-playsinline muted preload="auto"></video>
 
-  <button id="triggerBtn" onclick="abrirModal()">✨ ¡Participa Aquí! ✨</button>
+  <button id="triggerBtn" type="button" onclick="abrirModal()">✨ ¡Registrate Aquí! ✨</button>
 
   <div id="overlayModal">
-    <button class="close-modal-btn" onclick="cerrarModal()" aria-label="Cerrar">✕</button>
+    <button class="close-modal-btn" type="button" onclick="cerrarModal()" aria-label="Cerrar">✕</button>
 
     <!-- Paso 1: Usuario -->
     <div id="stepUsuario">
@@ -593,7 +622,7 @@
         <label>Ingresa las 4 letras de tu CURP y día de cumpleaños (4 letras + 2 números):</label>
         <input type="text" id="inputUsuario" placeholder="EJ. SERV16" maxlength="6" enterkeyhint="go" autocapitalize="characters" autocomplete="off" style="text-transform: uppercase;">
       </div>
-      <button id="btnContinuarUsuario" class="btn-action" onclick="validarUsuario()">Continuar</button>
+      <button id="btnContinuarUsuario" type="button" class="btn-action" onclick="validarUsuario()">Continuar</button>
     </div>
 
     <!-- Paso 2A: Registro Previo -->
@@ -606,8 +635,8 @@
       </div>
       <p style="font-size:14px; margin-bottom:8px;">¿Deseas modificar tu respuesta?</p>
       <div class="btn-dual-container">
-        <button class="btn-secondary" onclick="mantenerRespuesta()">No, mantener</button>
-        <button class="btn-modify" onclick="habilitarModificacion()">Sí, modificar</button>
+        <button type="button" class="btn-secondary" onclick="mantenerRespuesta()">No, mantener</button>
+        <button type="button" class="btn-modify" onclick="habilitarModificacion()">Sí, modificar</button>
       </div>
     </div>
 
@@ -664,9 +693,9 @@
 </div>
 
 <script>
-  const VIDEO_URL = "https://www.dropbox.com/scl/fi/z7vuqjalnza5r3smpd29g/2DA-LLAMADA-FIESTA-2026-V.4-ligth.mp4?rlkey=lkw5iewndz36uyz1tmjwi5obu&st=tsxz36r4&raw=1";
-  const API_URL = "https://script.google.com/macros/s/AKfycbxQtiPkf6OLFs2rs5OnpZI_di7ghT7LjDwjMKjMleTWujku3cV_fSvJ31rEte9F_0Rf/exec";
-  const SEGUNDO_APARICION = 30;
+  const VIDEO_URL = "https://www.dropbox.com/scl/fi/5ge8vaq3ns3x3r12q0srg/CULTIVANDO_IDEAS_LAS_FINANZAS_DE_LOS_POBRES.mp4?rlkey=a0qooiwj7il0t65sn4xxoslzj&st=mbikh5xv&raw=1";
+  const API_URL = "https://script.google.com/macros/s/AKfycbxQtiPkf6OLFs2rs5OnpZl_di7ghT7LjDwjMKjMIeTWujku3cV_fSvJ31rEte9F_0ReoA/exec";
+  const SEGUNDO_APARICION = 5;
 
   const FORMATO_USUARIO_REGEX = /^[A-Z]{4}[0-9]{2}$/;
 
@@ -691,6 +720,23 @@
   let debounceTimer = null;
   let activeRequestId = 0;
   let horizontalForzado = false;
+
+  // Control del botón protagonista (5 segundos al centro y luego regresa abajo)
+  let heroTimer = null;
+  let botonYaMostrado = false;
+  let registroCompletado = false;
+
+  function mostrarBotonProtagonista() {
+    if (modal.style.display === 'block') return;
+
+    triggerBtn.classList.add('hero-center');
+    triggerBtn.style.display = 'block';
+
+    if (heroTimer) clearTimeout(heroTimer);
+    heroTimer = setTimeout(() => {
+      triggerBtn.classList.remove('hero-center');
+    }, 5000);
+  }
 
   // ==========================================
   // CONTROL DE PANTALLA COMPLETA Y ORIENTACIÓN (iOS & ANDROID)
@@ -747,12 +793,10 @@
     }, 450);
   }
 
-  // Detectar cambio físico de orientación del teléfono
   window.addEventListener('orientationchange', () => {
     const current = video.currentTime;
     const wasPlaying = !video.paused;
 
-    // Si el usuario giró físicamente a vertical (0° o 180°), liberar el bloqueo horizontal
     const angle = (screen.orientation && typeof screen.orientation.angle === 'number')
       ? screen.orientation.angle
       : window.orientation;
@@ -771,7 +815,6 @@
     }, 250);
   });
 
-  // Respaldo con MediaQuery para detectar regreso físico a vertical en navegadores modernos
   const portraitMedia = window.matchMedia('(orientation: portrait)');
   if (portraitMedia && portraitMedia.addEventListener) {
     portraitMedia.addEventListener('change', (e) => {
@@ -950,7 +993,7 @@
     let startTime = Date.now();
     let timerInterval = setInterval(() => {
       let elapsed = Math.floor((Date.now() - startTime) / 1000);
-      timerCountdown.innerText = `Descargando... ${elapsed}s transcurridos`;
+      timerCountdown.innerText = `Descargando paquete optimizado: ${elapsed}s transcurridos`;
     }, 1000);
 
     video.src = VIDEO_URL;
@@ -982,7 +1025,6 @@
       activarInicio();
     }
 
-    // Inicia reproducción respetando la orientación natural (vertical) sin forzar horizontal
     playBtn.onclick = () => {
       document.getElementById('loaderScreen').style.display = 'none';
       video.controls = true;
@@ -1001,13 +1043,24 @@
     inicializarApp();
   }
 
+  // Disparar botón protagonista al llegar al segundo configurado
   video.addEventListener('timeupdate', () => {
-    if (video.currentTime >= SEGUNDO_APARICION && triggerBtn.style.display !== 'block' && modal.style.display !== 'block') {
-      triggerBtn.style.display = 'block';
+    if (video.currentTime >= SEGUNDO_APARICION && !botonYaMostrado) {
+      botonYaMostrado = true;
+      mostrarBotonProtagonista();
+    }
+  });
+
+  // Si termina el video y no se ha registrado, volver a destacar el botón al centro por 5s
+  video.addEventListener('ended', () => {
+    if (!registroCompletado && modal.style.display !== 'block') {
+      mostrarBotonProtagonista();
     }
   });
 
   function abrirModal() {
+    if (heroTimer) clearTimeout(heroTimer);
+    triggerBtn.classList.remove('hero-center');
     triggerBtn.style.display = 'none';
     modal.style.display = 'block';
     setTimeout(() => {
@@ -1020,6 +1073,7 @@
   function cerrarModal() {
     if (document.activeElement) document.activeElement.blur();
     modal.style.display = 'none';
+    triggerBtn.classList.remove('hero-center');
     triggerBtn.style.display = 'block';
   }
 
@@ -1156,6 +1210,7 @@
   }
 
   function mantenerRespuesta() {
+    registroCompletado = true;
     document.getElementById('stepPrevio').style.display = 'none';
     statusBox.className = "status-msg success";
     statusBox.innerHTML = "¡Perfecto! Conservamos tu confirmación previa.";
@@ -1245,6 +1300,7 @@
       detenerCargaConsulta();
 
       if (res.status === 'EXITO') {
+        registroCompletado = true;
         const detalleHospedaje = sesion.respuesta.includes('Asistiré')
           ? `<br><span style="font-size:13px; color:#a7f3d0;">Hospedaje: <strong>${sesion.hospedaje}</strong></span>`
           : '';
